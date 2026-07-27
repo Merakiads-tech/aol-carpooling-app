@@ -1,0 +1,147 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Dark mode is class-based (a `.dark` on <html>). */
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Book My Ride — design tokens.
+ * Calm indigo primary + confirm-green success accent, flat & premium.
+ * Colours are swappable here without touching component code.
+ */
+:root {
+  --radius: 0.75rem;
+
+  --background: #ffffff;
+  --foreground: #1a1a2e;
+
+  --card: #ffffff;
+  --card-foreground: #1a1a2e;
+
+  --popover: #ffffff;
+  --popover-foreground: #1a1a2e;
+
+  /* Brand: calm indigo */
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f1f0fb;
+  --secondary-foreground: #312e81;
+
+  --muted: #f5f5f7;
+  --muted-foreground: #6b7280;
+
+  /* Neutral hover/subtle surface (shadcn uses --accent for hovers) */
+  --accent: #f1f0fb;
+  --accent-foreground: #312e81;
+
+  /* Positive / confirm CTA (Request Seat, Approve) */
+  --success: #16a34a;
+  --success-foreground: #ffffff;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #4f46e5;
+
+  /* Trust/role badges */
+  --teacher: #7c3aed;
+  --teacher-foreground: #ffffff;
+  --female: #db2777;
+  --female-foreground: #ffffff;
+}
+
+.dark {
+  --background: #0f0f16;
+  --foreground: #ececf1;
+
+  --card: #16161f;
+  --card-foreground: #ececf1;
+
+  --popover: #16161f;
+  --popover-foreground: #ececf1;
+
+  --primary: #7c6ff0;
+  --primary-foreground: #0f0f16;
+
+  --secondary: #232333;
+  --secondary-foreground: #e4e4f0;
+
+  --muted: #1e1e29;
+  --muted-foreground: #a1a1aa;
+
+  --accent: #232333;
+  --accent-foreground: #e4e4f0;
+
+  --success: #22c55e;
+  --success-foreground: #06210f;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #2a2a38;
+  --input: #2a2a38;
+  --ring: #7c6ff0;
+
+  --teacher: #a78bfa;
+  --teacher-foreground: #0f0f16;
+  --female: #f472b6;
+  --female-foreground: #0f0f16;
+}
+
+/* Map tokens to Tailwind utilities (bg-primary, text-muted-foreground, …). */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-teacher: var(--teacher);
+  --color-teacher-foreground: var(--teacher-foreground);
+  --color-female: var(--female);
+  --color-female-foreground: var(--female-foreground);
+
+  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+  }
+}
