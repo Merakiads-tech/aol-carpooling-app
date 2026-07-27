@@ -30,11 +30,7 @@ There are two different "callback" URLs — don't mix them up:
      - `https://itubffdvqigyavkrhfok.supabase.co/auth/v1/callback`
    - Create, then copy the **Client ID** and **Client secret**.
 
-```
-   Client ID: 735987597310-bc6jr0sg3bclsmet9ngp8kf80p9bke1i.apps.googleusercontent.com
-   Client Secret: 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
 
-```
 
 
 ## 2. Supabase Dashboard
