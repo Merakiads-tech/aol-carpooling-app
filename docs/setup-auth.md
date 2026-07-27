@@ -32,6 +32,7 @@ There are two different "callback" URLs — don't mix them up:
 
 
 
+
 ## 2. Supabase Dashboard
 
 1. **Authentication → Sign In / Providers → Google** → enable.
