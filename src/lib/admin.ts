@@ -2,7 +2,7 @@ import "server-only";
 import { notFound, redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { EventLocation } from "@/lib/types";
+import type { EventLocation, RideDirection, RideStatus } from "@/lib/types";
 
 export function adminEmails(): string[] {
   return (process.env.ADMIN_EMAILS ?? "")
@@ -67,6 +67,36 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
   const supabase = await createClient();
   const { data } = await supabase.rpc("admin_users");
   return (data as AdminUser[]) ?? [];
+}
+
+export type AdminRide = {
+  id: string;
+  direction: RideDirection;
+  depart_date: string;
+  depart_time: string;
+  pickup_label: string;
+  pickup_lat: number | null;
+  pickup_lng: number | null;
+  seats_total: number;
+  seats_filled: number;
+  status: RideStatus;
+  show_phone_public: boolean;
+  paired_ride_id: string | null;
+  created_at: string;
+  event: string;
+  driver: {
+    name: string | null;
+    phone: string | null;
+    gender: string | null;
+    role: string;
+  };
+  requests: { pending: number; approved: number; total: number };
+};
+
+export async function getAllRides(): Promise<AdminRide[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("admin_all_rides");
+  return (data as AdminRide[]) ?? [];
 }
 
 export async function getAllLocations(): Promise<EventLocation[]> {

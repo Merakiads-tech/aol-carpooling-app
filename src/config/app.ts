@@ -6,7 +6,7 @@
  */
 export const APP_CONFIG = {
   /** Brand name shown everywhere in the UI. */
-  name: process.env.NEXT_PUBLIC_APP_NAME ?? "Book My Ride",
+  name: process.env.NEXT_PUBLIC_APP_NAME ?? "OneRide",
   /** Short tagline for hero / login. */
   tagline: "Share the drive. Arrive together.",
   /** One-line description used for metadata. */

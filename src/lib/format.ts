@@ -33,11 +33,12 @@ export function todayISO(timeZone = "Asia/Kolkata"): string {
   return parts; // en-CA gives YYYY-MM-DD
 }
 
+/** Lowercase phrase for use inside sentences, e.g. "Your ride to X is on". */
 export function directionLabel(
   direction: RideDirection,
   eventName: string,
 ): string {
-  return direction === "to_event" ? `To ${eventName}` : `From ${eventName}`;
+  return direction === "to_event" ? `to ${eventName}` : `from ${eventName}`;
 }
 
 export function timeToMinutes(t: string): number {

@@ -3,7 +3,6 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import {
-  ArrowUpRight,
   BellRing,
   Check,
   Clock,
@@ -16,7 +15,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { GenderBadge, RoleBadge } from "@/components/badges";
-import { directionLabel, formatDate, formatTime } from "@/lib/format";
+import { RouteLabel } from "@/components/route-label";
+import { formatDate, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { OfferedRide } from "@/lib/types";
 import { respondToRequestAction, setRideStatusAction } from "./actions";
@@ -52,10 +52,10 @@ export function OfferedRideCard({ ride }: { ride: OfferedRide }) {
             : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
         )}
       >
-        <span className="inline-flex items-center gap-1.5">
-          <ArrowUpRight className={cn("size-4", !toEvent && "rotate-180")} />
-          {directionLabel(ride.direction, ride.event_location.name)}
-        </span>
+        <RouteLabel
+          direction={ride.direction}
+          eventName={ride.event_location.name}
+        />
         <Button
           size="sm"
           variant={isFull ? "secondary" : "outline"}
