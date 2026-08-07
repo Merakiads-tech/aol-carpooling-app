@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { Clock, Loader2, MapPin, Phone, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GenderBadge, RoleBadge } from "@/components/badges";
-import { directionLabel, formatDate, formatTime } from "@/lib/format";
+import { RouteLabel } from "@/components/route-label";
+import { formatDate, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { MyRequest, RequestStatus } from "@/lib/types";
 import { cancelRequestAction } from "./actions";
@@ -54,9 +55,11 @@ export function RequestedCard({ req }: { req: MyRequest }) {
             <GenderBadge gender={req.driver.gender} />
             <RoleBadge role={req.driver.role} />
           </div>
-          <p className="text-sm text-muted-foreground">
-            {directionLabel(req.direction, req.event_location.name)}
-          </p>
+          <RouteLabel
+            direction={req.direction}
+            eventName={req.event_location.name}
+            className="text-sm text-muted-foreground"
+          />
         </div>
         <span
           className={cn(

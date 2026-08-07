@@ -3,6 +3,9 @@ import {
   ArrowUpRight,
   BellRing,
   CarFront,
+  Check,
+  ChevronRight,
+  Clock,
   MapPin,
   MessageCircle,
   Phone,
@@ -23,7 +26,9 @@ import {
   isRideLive,
   todayISO,
 } from "@/lib/format";
+import { RouteLabel } from "@/components/route-label";
 import { cn } from "@/lib/utils";
+import type { RequestStatus, RideDirection } from "@/lib/types";
 
 const REQUEST_TAG: Record<string, { label: string; cls: string }> = {
   pending: { label: "Waiting", cls: "bg-primary/10 text-primary" },
@@ -32,6 +37,18 @@ const REQUEST_TAG: Record<string, { label: string; cls: string }> = {
     cls: "bg-[var(--success)]/10 text-[var(--success)]",
   },
 };
+
+type UpItem = {
+  key: string;
+  href: string;
+  date: string;
+  time: string;
+  direction: RideDirection;
+  eventName: string;
+} & (
+  | { type: "offered"; pending: number; approved: number }
+  | { type: "requested"; status: RequestStatus }
+);
 
 export default async function HomePage() {
   const [profile, offered, requests, pendingCount] = await Promise.all([
@@ -43,7 +60,6 @@ export default async function HomePage() {
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
   const today = todayISO();
 
-  // Rides happening right now → pickup banners.
   const liveOffered = offered.filter(
     (r) => r.status !== "cancelled" && isRideLive(r.depart_date, r.depart_time),
   );
@@ -51,30 +67,39 @@ export default async function HomePage() {
     (r) => r.status === "approved" && isRideLive(r.depart_date, r.depart_time),
   );
 
-  const upcoming = [
+  const upcoming: UpItem[] = [
     ...offered
       .filter((r) => r.depart_date >= today && r.status !== "cancelled")
-      .map((r) => ({
-        key: `o-${r.id}`,
-        href: "/my-rides?tab=offered",
-        date: r.depart_date,
-        time: r.depart_time,
-        title: directionLabel(r.direction, r.event_location.name),
-        tag: { label: "Offering", cls: "bg-secondary text-secondary-foreground" },
-      })),
+      .map(
+        (r): UpItem => ({
+          type: "offered",
+          key: `o-${r.id}`,
+          href: "/my-rides?tab=offered",
+          date: r.depart_date,
+          time: r.depart_time,
+          direction: r.direction,
+          eventName: r.event_location.name,
+          pending: r.requests.filter((q) => q.status === "pending").length,
+          approved: r.requests.filter((q) => q.status === "approved").length,
+        }),
+      ),
     ...requests
       .filter((r) => r.depart_date >= today && r.status !== "declined")
-      .map((r) => ({
-        key: `r-${r.request_id}`,
-        href: "/my-rides?tab=requested",
-        date: r.depart_date,
-        time: r.depart_time,
-        title: directionLabel(r.direction, r.event_location.name),
-        tag: REQUEST_TAG[r.status] ?? REQUEST_TAG.pending,
-      })),
+      .map(
+        (r): UpItem => ({
+          type: "requested",
+          key: `r-${r.request_id}`,
+          href: "/my-rides?tab=requested",
+          date: r.depart_date,
+          time: r.depart_time,
+          direction: r.direction,
+          eventName: r.event_location.name,
+          status: r.status,
+        }),
+      ),
   ]
     .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
-    .slice(0, 4);
+    .slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -88,7 +113,6 @@ export default async function HomePage() {
         <p className="mt-1 text-muted-foreground">Where are you headed today?</p>
       </div>
 
-      {/* Live-trip pickup banners */}
       {liveOffered.map((r) => (
         <LiveBanner
           key={`lo-${r.id}`}
@@ -111,7 +135,6 @@ export default async function HomePage() {
         />
       ))}
 
-      {/* Driver has requests to review */}
       {pendingCount > 0 && (
         <Link
           href="/my-rides?tab=offered"
@@ -133,7 +156,6 @@ export default async function HomePage() {
         </Link>
       )}
 
-      {/* Primary actions */}
       <div className="grid grid-cols-2 gap-3">
         <ActionCard
           href="/rides"
@@ -170,25 +192,7 @@ export default async function HomePage() {
           <ul className="mt-3 space-y-2">
             {upcoming.map((item) => (
               <li key={item.key}>
-                <Link
-                  href={item.href}
-                  className="flex items-center justify-between rounded-xl border bg-card p-3 transition-colors hover:border-primary/40"
-                >
-                  <div>
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(item.date)} · {formatTime(item.time)}
-                    </p>
-                  </div>
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-1 text-xs font-medium",
-                      item.tag.cls,
-                    )}
-                  >
-                    {item.tag.label}
-                  </span>
-                </Link>
+                <UpcomingRow item={item} />
               </li>
             ))}
           </ul>
@@ -197,6 +201,59 @@ export default async function HomePage() {
 
       <ContactAdmins />
     </div>
+  );
+}
+
+function UpcomingRow({ item }: { item: UpItem }) {
+  return (
+    <Link
+      href={item.href}
+      className="block rounded-xl border bg-card p-3 transition-colors hover:border-primary/40"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <RouteLabel direction={item.direction} eventName={item.eventName} />
+        {item.type === "requested" && (
+          <span
+            className={cn(
+              "shrink-0 rounded-full px-2 py-1 text-xs font-medium",
+              (REQUEST_TAG[item.status] ?? REQUEST_TAG.pending).cls,
+            )}
+          >
+            {(REQUEST_TAG[item.status] ?? REQUEST_TAG.pending).label}
+          </span>
+        )}
+        {item.type === "offered" && (
+          <span className="shrink-0 rounded-full bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
+            Offering
+          </span>
+        )}
+      </div>
+
+      <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+        <Clock className="size-3.5" />
+        {formatDate(item.date)} · {formatTime(item.time)}
+      </div>
+
+      {/* Actionable request summary for the driver */}
+      {item.type === "offered" && (item.pending > 0 || item.approved > 0) && (
+        <div className="mt-2.5 flex items-center gap-2 border-t pt-2.5">
+          {item.pending > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
+              <BellRing className="size-3" /> {item.pending} new
+            </span>
+          )}
+          {item.approved > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--success)]/10 px-2 py-0.5 text-xs font-semibold text-[var(--success)]">
+              <Check className="size-3" /> {item.approved} approved
+            </span>
+          )}
+          <span className="ml-auto inline-flex items-center gap-0.5 text-xs font-semibold text-primary">
+            {item.pending > 0 ? "Review requests" : "Manage"}
+            <ChevronRight className="size-3.5" />
+          </span>
+        </div>
+      )}
+    </Link>
   );
 }
 

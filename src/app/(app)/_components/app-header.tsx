@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Car, LogOut, Shield } from "lucide-react";
 import { APP_CONFIG } from "@/config/app";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { isAdminEmail } from "@/lib/admin";
 import type { Profile } from "@/lib/types";
 
@@ -26,7 +27,8 @@ export function AppHeader({ profile }: { profile: Profile }) {
           {APP_CONFIG.name}
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
           {isAdminEmail(profile.email) && (
             <Link
               href="/admin"
