@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Minus, Plus, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,18 +14,40 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { requestSeatAction } from "@/app/(app)/rides/actions";
+import type { RideDirection } from "@/lib/types";
 
 export function RequestSeatButton({
   rideId,
   seatsLeft,
+  direction,
+  date,
+  eventName,
 }: {
   rideId: string;
   seatsLeft: number;
+  direction?: RideDirection;
+  date?: string;
+  eventName?: string;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [seats, setSeats] = useState(1);
   const [pending, start] = useTransition();
   const max = Math.max(1, Math.min(seatsLeft, 6));
+
+  function nudgeReturn() {
+    // After booking a ride TO the event, nudge to book the ride back.
+    if (direction !== "to_event" || !date) return;
+    toast("Need a ride back too?", {
+      description: `Book your return from ${eventName ?? "the event"} now.`,
+      action: {
+        label: "Find return",
+        onClick: () =>
+          router.push(`/rides?direction=from_event&date=${date}`),
+      },
+      duration: 8000,
+    });
+  }
 
   function submit() {
     start(async () => {
@@ -34,6 +57,7 @@ export function RequestSeatButton({
       } else {
         toast.success("Request sent — the driver will get back to you.");
         setOpen(false);
+        setTimeout(nudgeReturn, 400);
       }
     });
   }

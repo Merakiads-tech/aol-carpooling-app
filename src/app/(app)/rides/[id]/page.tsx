@@ -34,6 +34,9 @@ export default async function RideDetailPage({
       <RequestSeatButton
         rideId={ride!.id}
         seatsLeft={ride!.seats_total - ride!.seats_filled}
+        direction={ride!.direction}
+        date={ride!.depart_date}
+        eventName={ride!.event_location.name}
       />
     );
   }

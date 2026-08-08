@@ -1,7 +1,7 @@
 import { Clock, Link2, MapPin, Phone, Users } from "lucide-react";
 import { getAllRides } from "@/lib/admin";
 import { RouteLabel } from "@/components/route-label";
-import { GenderBadge, RoleBadge } from "@/components/badges";
+import { GenderBadge, GenderOnlyPill, RoleBadge } from "@/components/badges";
 import { formatDate, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Gender, RideStatus, UserRole } from "@/lib/types";
@@ -32,6 +32,7 @@ export default async function AdminRidesPage() {
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <RouteLabel direction={r.direction} eventName={r.event} />
                 <div className="flex items-center gap-1.5">
+                  <GenderOnlyPill gender={r.gender_only as "male" | "female" | null} />
                   {r.paired_ride_id && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                       <Link2 className="size-3" /> Paired

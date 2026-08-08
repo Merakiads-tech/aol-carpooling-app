@@ -2,13 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getEventLocations } from "@/lib/rides";
+import { getProfile } from "@/lib/auth";
 import { todayISO } from "@/lib/format";
 import { PostRideForm } from "./post-ride-form";
 
 export const metadata: Metadata = { title: "Offer a Ride" };
 
 export default async function PostRidePage() {
-  const locations = await getEventLocations();
+  const [locations, profile] = await Promise.all([
+    getEventLocations(),
+    getProfile(),
+  ]);
 
   if (locations.length === 0) {
     return (
@@ -26,5 +30,11 @@ export default async function PostRidePage() {
     );
   }
 
-  return <PostRideForm locations={locations} today={todayISO()} />;
+  return (
+    <PostRideForm
+      locations={locations}
+      today={todayISO()}
+      driverGender={profile?.gender ?? null}
+    />
+  );
 }

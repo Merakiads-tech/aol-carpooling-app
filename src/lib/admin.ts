@@ -83,6 +83,7 @@ export type AdminRide = {
   show_phone_public: boolean;
   paired_ride_id: string | null;
   created_at: string;
+  gender_only: string | null;
   event: string;
   driver: {
     name: string | null;

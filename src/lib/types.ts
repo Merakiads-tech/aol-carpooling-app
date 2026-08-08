@@ -38,6 +38,7 @@ export type RideCard = {
   is_full: boolean;
   is_mine?: boolean;
   show_phone_public: boolean;
+  gender_only: Gender | null;
   event_location: { id: string; name: string; maps_url?: string | null };
   driver: DriverSummary;
   driver_phone: string | null;
@@ -63,6 +64,7 @@ export type OfferedRide = {
   seats_filled: number;
   status: RideStatus;
   show_phone_public: boolean;
+  gender_only: Gender | null;
   event_location: { id: string; name: string };
   requests: OfferedRequest[];
 };
@@ -77,6 +79,7 @@ export type MyRequest = {
   pickup_label: string;
   seats_total: number;
   seats_filled: number;
+  gender_only: Gender | null;
   event_location: { id: string; name: string };
   driver: DriverSummary;
   driver_phone: string | null;

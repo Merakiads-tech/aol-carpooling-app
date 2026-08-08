@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { COPY } from "@/config/app";
 import { DateField } from "@/components/date-field";
 import { TimeField } from "@/components/time-field";
-import type { EventLocation } from "@/lib/types";
+import type { EventLocation, Gender } from "@/lib/types";
 import type { MapValue } from "@/components/map-picker";
 import { createRideAction, type PostRideState } from "./actions";
 
@@ -37,9 +37,11 @@ const CHANDIGARH = { lat: 30.7333, lng: 76.7794 };
 export function PostRideForm({
   locations,
   today,
+  driverGender,
 }: {
   locations: EventLocation[];
   today: string;
+  driverGender: Gender | null;
 }) {
   const [state, formAction, pending] = useActionState<PostRideState, FormData>(
     createRideAction,
@@ -54,6 +56,7 @@ export function PostRideForm({
   const [seats, setSeats] = useState("3");
   const [includeReturn, setIncludeReturn] = useState(true);
   const [showPhone, setShowPhone] = useState(false);
+  const [genderOnly, setGenderOnly] = useState(false);
   const [goingDate, setGoingDate] = useState(today);
   const [goingTime, setGoingTime] = useState("08:00");
   const [returnDate, setReturnDate] = useState(today);
@@ -231,6 +234,35 @@ export function PostRideForm({
           </div>
         )}
       </div>
+
+      {/* Reserve seats for one gender (only for male/female drivers) */}
+      {(driverGender === "male" || driverGender === "female") && (
+        <>
+          <label
+            className={cn(
+              "flex items-center justify-between rounded-xl border p-4",
+              genderOnly &&
+                (driverGender === "female"
+                  ? "border-[var(--female)]/50 bg-[var(--female)]/5"
+                  : "border-primary/50 bg-primary/5"),
+            )}
+          >
+            <div>
+              <p className="font-medium">
+                {driverGender === "female"
+                  ? "Reserve all seats for women"
+                  : "Reserve all seats for men"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Only {driverGender === "female" ? "women" : "men"} will see and
+                request this ride.
+              </p>
+            </div>
+            <Switch checked={genderOnly} onCheckedChange={setGenderOnly} />
+          </label>
+          <input type="hidden" name="gender_only" value={String(genderOnly)} />
+        </>
+      )}
 
       {/* Show phone */}
       <label className="flex items-center justify-between rounded-xl border p-4">

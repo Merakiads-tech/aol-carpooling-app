@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { Clock, Loader2, MapPin, Phone, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { GenderBadge, RoleBadge } from "@/components/badges";
+import { GenderBadge, GenderOnlyPill, RoleBadge } from "@/components/badges";
 import { RouteLabel } from "@/components/route-label";
 import { formatDate, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -84,6 +84,7 @@ export function RequestedCard({ req }: { req: MyRequest }) {
           <Users className="size-3.5" />
           {req.seats} {req.seats === 1 ? "seat" : "seats"}
         </span>
+        <GenderOnlyPill gender={req.gender_only} />
       </div>
 
       {req.status === "approved" && req.driver_phone && (

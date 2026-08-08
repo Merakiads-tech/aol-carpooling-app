@@ -1,9 +1,10 @@
 "use client";
 
+import { useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { DateField } from "@/components/date-field";
+import { DateChips } from "@/components/date-chips";
 import { cn } from "@/lib/utils";
 import type { RideDirection } from "@/lib/types";
 
@@ -25,35 +26,33 @@ export function FilterBar({
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const [pending, startTransition] = useTransition();
 
   function update(next: Record<string, string>) {
     const sp = new URLSearchParams(params.toString());
     for (const [k, v] of Object.entries(next)) sp.set(k, v);
-    router.push(`${pathname}?${sp.toString()}`);
+    startTransition(() => {
+      router.push(`${pathname}?${sp.toString()}`, { scroll: false });
+    });
   }
 
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
-        <SegBtn
-          active={direction === "to_event"}
-          onClick={() => update({ direction: "to_event" })}
-        >
-          To {eventName}
+        <SegBtn active={direction === "to_event"} onClick={() => update({ direction: "to_event" })}>
+          Going to {eventName}
         </SegBtn>
-        <SegBtn
-          active={direction === "from_event"}
-          onClick={() => update({ direction: "from_event" })}
-        >
-          From {eventName}
+        <SegBtn active={direction === "from_event"} onClick={() => update({ direction: "from_event" })}>
+          Return from {eventName}
         </SegBtn>
       </div>
 
       <div className="space-y-1.5">
         <Label>Date</Label>
-        <DateField
+        <DateChips
           value={date}
           today={today}
+          pending={pending}
           onChange={(v) => update({ date: v })}
         />
       </div>
@@ -85,7 +84,7 @@ function SegBtn({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-lg border py-2.5 text-sm font-medium transition-colors",
+        "rounded-lg border px-2 py-2.5 text-sm font-medium transition-colors",
         active ? "border-primary bg-primary/5 text-primary" : "hover:bg-accent",
       )}
     >

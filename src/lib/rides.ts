@@ -55,3 +55,11 @@ export async function getMyPendingRequestCount(): Promise<number> {
   const { data } = await supabase.rpc("my_pending_request_count");
   return (data as number) ?? 0;
 }
+
+export type NextRideDay = { date: string; count: number };
+
+export async function getNextRideDay(): Promise<NextRideDay | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("next_ride_day");
+  return (data as NextRideDay) ?? null;
+}

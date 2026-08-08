@@ -56,6 +56,7 @@ export async function createRideAction(
     p_return_seats: includeReturn
       ? Number(formData.get("return_seats") || seats)
       : null,
+    p_gender_only: formData.get("gender_only") === "true",
   });
 
   if (error) return { error: error.message };

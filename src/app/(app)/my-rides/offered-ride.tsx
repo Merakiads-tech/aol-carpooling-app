@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { GenderBadge, RoleBadge } from "@/components/badges";
+import { GenderBadge, GenderOnlyPill, RoleBadge } from "@/components/badges";
 import { RouteLabel } from "@/components/route-label";
 import { formatDate, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -81,6 +81,7 @@ export function OfferedRideCard({ ride }: { ride: OfferedRide }) {
             <Users className="size-3.5" />
             {ride.seats_filled}/{ride.seats_total} seats
           </span>
+          <GenderOnlyPill gender={ride.gender_only} />
         </div>
 
         {/* Prominent "new requests" call-out */}

@@ -1,6 +1,6 @@
 import { Clock, MapPin, Phone } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { GenderBadge, RoleBadge } from "@/components/badges";
+import { GenderBadge, GenderOnlyPill, RoleBadge } from "@/components/badges";
 import { RouteLabel } from "@/components/route-label";
 import { formatDate, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -52,6 +52,7 @@ export function RideCard({
               </span>
               <GenderBadge gender={ride.driver.gender} />
               <RoleBadge role={ride.driver.role} />
+              <GenderOnlyPill gender={ride.gender_only} />
             </div>
             <p className="text-sm text-muted-foreground">
               {ride.is_full
