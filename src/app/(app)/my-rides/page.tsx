@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getMyOfferedRides, getMyRequests } from "@/lib/rides";
+import { todayISO } from "@/lib/format";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { COPY } from "@/config/app";
-import { OfferedRideCard } from "./offered-ride";
-import { RequestedCard } from "./requested-card";
+import { Agenda } from "./agenda";
 
 export const metadata: Metadata = { title: "My Rides" };
 
@@ -17,6 +17,7 @@ export default async function MyRidesPage({
 }) {
   const { tab } = await searchParams;
   const defaultTab = tab === "requested" ? "requested" : "offered";
+  const today = todayISO();
   const [offered, requests] = await Promise.all([
     getMyOfferedRides(),
     getMyRequests(),
@@ -51,29 +52,25 @@ export default async function MyRidesPage({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="offered" className="mt-4 space-y-3">
+        <TabsContent value="offered" className="mt-4">
           {offered.length === 0 ? (
             <EmptyState
               text="You haven't offered a seat yet."
               cta={{ href: "/rides/new", label: COPY.offerRide }}
             />
           ) : (
-            offered.map((ride) => (
-              <OfferedRideCard key={ride.id} ride={ride} />
-            ))
+            <Agenda kind="offered" items={offered} today={today} />
           )}
         </TabsContent>
 
-        <TabsContent value="requested" className="mt-4 space-y-3">
+        <TabsContent value="requested" className="mt-4">
           {requests.length === 0 ? (
             <EmptyState
               text="You haven't requested a car yet."
               cta={{ href: "/rides", label: COPY.findRide }}
             />
           ) : (
-            requests.map((req) => (
-              <RequestedCard key={req.request_id} req={req} />
-            ))
+            <Agenda kind="requested" items={requests} today={today} />
           )}
         </TabsContent>
       </Tabs>
