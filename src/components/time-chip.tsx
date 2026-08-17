@@ -17,8 +17,8 @@ export function TimeChip({
       className={cn(
         "flex w-14 shrink-0 flex-col items-center justify-center rounded-xl py-2",
         toEvent
-          ? "bg-primary/10 text-primary"
-          : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+          ? "bg-[var(--gold-soft)] text-[var(--gold-ink)]"
+          : "bg-secondary text-secondary-foreground",
       )}
     >
       <span className="text-sm font-bold leading-none tabular-nums">{hm}</span>

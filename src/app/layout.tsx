@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
-import { Lexend, Source_Sans_3 } from "next/font/google";
+import { Calistoga, Inter } from "next/font/google";
 import "./globals.css";
 import { APP_CONFIG } from "@/config/app";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
-const lexend = Lexend({
-  variable: "--font-lexend",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
 
-const sourceSans = Source_Sans_3({
-  variable: "--font-source-sans",
+const calistoga = Calistoga({
+  weight: "400",
+  variable: "--font-calistoga",
   subsets: ["latin"],
   display: "swap",
 });
@@ -34,7 +35,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${lexend.variable} ${sourceSans.variable} h-full antialiased`}
+      className={`${inter.variable} ${calistoga.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider

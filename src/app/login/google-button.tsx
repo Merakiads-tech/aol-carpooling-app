@@ -27,7 +27,7 @@ export function GoogleButton({ next }: { next: string }) {
       disabled={loading}
       size="lg"
       variant="outline"
-      className="w-full gap-3"
+      className="w-full gap-3 rounded-2xl border-border bg-card py-6 text-base font-semibold shadow-sm"
     >
       {loading ? (
         <Loader2 className="size-5 animate-spin" aria-hidden />

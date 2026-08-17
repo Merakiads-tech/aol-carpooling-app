@@ -4,24 +4,38 @@ import {
   BellRing,
   CarFront,
   ChevronRight,
-  Clock,
+  Hand,
+  Handshake,
   MapPin,
   MessageCircle,
   Phone,
+  PlusCircle,
   Search,
+  Users,
 } from "lucide-react";
-import { APP_CONFIG, COPY } from "@/config/app";
+import { APP_CONFIG } from "@/config/app";
 import { getProfile } from "@/lib/auth";
 import { getMyOfferedRides, getMyRequests } from "@/lib/rides";
-import {
-  directionLabel,
-  formatDate,
-  formatTime,
-  isRideLive,
-  todayISO,
-} from "@/lib/format";
-import { RouteLabel } from "@/components/route-label";
-import { cn } from "@/lib/utils";
+import { formatDate, formatTime, todayISO } from "@/lib/format";
+
+type Featured = {
+  kind: "approved" | "pending" | "driving";
+  direction: "to_event" | "from_event";
+  eventName: string;
+  pickup: string;
+  date: string;
+  time: string;
+  seats: number;
+  seatsBooked?: number;
+  driverName?: string | null;
+  driverPhone?: string | null;
+  href: string;
+};
+
+function splitLoc(label: string) {
+  const parts = label.split(",").map((s) => s.trim());
+  return { main: parts[0], sub: parts.slice(1).join(", ") };
+}
 
 export default async function HomePage() {
   const [profile, offered, requests] = await Promise.all([
@@ -31,252 +45,327 @@ export default async function HomePage() {
   ]);
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
   const today = todayISO();
-
   const pendingCount = offered.reduce(
     (n, r) => n + r.requests.filter((q) => q.status === "pending").length,
     0,
   );
-  const liveOffered = offered.find(
-    (r) => r.status !== "cancelled" && isRideLive(r.depart_date, r.depart_time),
-  );
-  const liveApproved = requests.find(
-    (r) => r.status === "approved" && isRideLive(r.depart_date, r.depart_time),
-  );
 
-  const upcoming = [
+  const candidates: Featured[] = [
+    ...requests
+      .filter(
+        (r) =>
+          r.depart_date >= today &&
+          (r.status === "approved" || r.status === "pending"),
+      )
+      .map((r) => ({
+        kind: (r.status === "approved" ? "approved" : "pending") as
+          | "approved"
+          | "pending",
+        direction: r.direction,
+        eventName: r.event_location.name,
+        pickup: r.pickup_label,
+        date: r.depart_date,
+        time: r.depart_time,
+        seats: r.seats,
+        driverName: r.driver.name,
+        driverPhone: r.driver_phone,
+        href: "/my-rides?tab=requested",
+      })),
     ...offered
       .filter((r) => r.depart_date >= today && r.status !== "cancelled")
       .map((r) => ({
-        key: `o-${r.id}`,
+        kind: "driving" as const,
+        direction: r.direction,
+        eventName: r.event_location.name,
+        pickup: r.pickup_label,
+        date: r.depart_date,
+        time: r.depart_time,
+        seats: r.seats_total,
+        seatsBooked: r.seats_filled,
         href: "/my-rides?tab=offered",
-        date: r.depart_date,
-        time: r.depart_time,
-        direction: r.direction,
-        eventName: r.event_location.name,
-        tag: { label: "Offering", cls: "bg-secondary text-secondary-foreground" },
       })),
-    ...requests
-      .filter((r) => r.depart_date >= today && r.status !== "declined")
-      .map((r) => ({
-        key: `r-${r.request_id}`,
-        href: "/my-rides?tab=requested",
-        date: r.depart_date,
-        time: r.depart_time,
-        direction: r.direction,
-        eventName: r.event_location.name,
-        tag:
-          r.status === "approved"
-            ? { label: "Approved", cls: "bg-[var(--success)]/10 text-[var(--success)]" }
-            : { label: "Waiting", cls: "bg-primary/10 text-primary" },
-      })),
-  ].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  ].sort((a, b) =>
+    (a.date + a.time).localeCompare(b.date + b.time),
+  );
 
-  const subtitle =
-    pendingCount > 0
-      ? "You have ride requests to review."
-      : upcoming.length > 0
-        ? "Here's what's coming up."
-        : "Where are you headed today?";
+  const featured = candidates[0] ?? null;
 
   return (
-    <div className="space-y-8">
-      {/* ── Greeting ── */}
-      <header className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500">
-        <h1 className="text-[26px] font-semibold leading-tight tracking-tight">
-          Namaste, {firstName}
+    <div className="space-y-6">
+      <header>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--gold-ink)]">
+          {formatDate(today)}
+        </p>
+        <h1 className="mt-1.5 text-[30px] leading-tight">
+          {greeting()}, {firstName}.
         </h1>
-        <p className="mt-1 text-muted-foreground">{subtitle}</p>
       </header>
 
-      {/* ── Primary action, then a clear secondary ── */}
-      <section className="space-y-3 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-500">
+      {pendingCount > 0 && (
         <Link
-          href="/rides"
-          className="group relative flex items-center gap-4 overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-500 to-violet-600 p-6 text-white shadow-lg transition-transform active:scale-[0.99]"
+          href="/my-rides?tab=offered"
+          className="flex items-center gap-3 rounded-2xl border border-[var(--gold)]/40 bg-[var(--gold-soft)] p-4"
         >
-          {/* soft glow */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -right-8 -top-10 size-40 rounded-full bg-white/10 blur-2xl"
-          />
-          <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur">
-            <Search className="size-7" aria-hidden />
+          <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--gold)] text-white">
+            <BellRing className="size-5" />
           </span>
-          <span className="relative flex-1">
-            <span className="block text-xl font-semibold">{COPY.findRide}</span>
-            <span className="mt-0.5 block text-sm text-white/85">
-              {COPY.findRideSub}
-            </span>
-          </span>
-          <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
+          <div className="flex-1">
+            <p className="font-semibold text-[var(--gold-ink)]">
+              {pendingCount} {pendingCount === 1 ? "person wants" : "people want"}{" "}
+              to join
+            </p>
+            <p className="text-sm text-[var(--gold-ink)]/80">
+              Approve or decline in My Rides.
+            </p>
+          </div>
+          <ChevronRight className="size-5 text-[var(--gold-ink)]" />
         </Link>
+      )}
 
+      {featured ? (
+        <BoardingPass f={featured} />
+      ) : (
+        <EmptyHero firstName={firstName} />
+      )}
+
+      {/* browse + offer */}
+      <Link
+        href="/rides"
+        className="flex items-center justify-between rounded-2xl border bg-card px-5 py-4 transition-colors hover:border-[var(--gold)]/40"
+      >
+        <span className="flex items-center gap-3">
+          <Search className="size-5 text-[var(--gold-ink)]" />
+          <span className="font-semibold">Browse rides to Hariwan Ashram</span>
+        </span>
+        <ArrowRight className="size-5 text-muted-foreground" />
+      </Link>
+
+      {featured && (
         <Link
           href="/rides/new"
-          className="group flex items-center gap-4 rounded-2xl border bg-card p-4 transition-colors hover:border-emerald-500/40"
+          className="inline-flex items-center gap-1.5 px-1 text-sm font-semibold text-[var(--gold-ink)]"
         >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            <CarFront className="size-5.5" aria-hidden />
-          </span>
-          <span className="flex-1">
-            <span className="block font-semibold">{COPY.offerRide}</span>
-            <span className="text-sm text-muted-foreground">
-              {COPY.offerRideSub}
-            </span>
-          </span>
-          <ArrowRight className="size-5 text-muted-foreground transition-transform group-hover:translate-x-1" />
+          <PlusCircle className="size-4" /> Have a car? Offer a seat
         </Link>
-      </section>
-
-      {/* ── One focal personal card (most relevant only) ── */}
-      <FocalCard
-        live={liveOffered ? "offered" : liveApproved ? "requested" : null}
-        liveTitle={
-          liveOffered
-            ? `Your ride ${directionLabel(liveOffered.direction, liveOffered.event_location.name)}`
-            : liveApproved
-              ? `Your ride ${directionLabel(liveApproved.direction, liveApproved.event_location.name)}`
-              : ""
-        }
-        livePhone={liveApproved?.driver_phone ?? null}
-        pendingCount={pendingCount}
-        upcoming={upcoming.slice(0, 2)}
-      />
+      )}
 
       <ContactAdmins />
     </div>
   );
 }
 
-type UpItem = {
-  key: string;
-  href: string;
-  date: string;
-  time: string;
-  direction: "to_event" | "from_event";
-  eventName: string;
-  tag: { label: string; cls: string };
-};
+function greeting() {
+  // Server renders in UTC; keep it simple + stable.
+  return "Namaste";
+}
 
-function FocalCard({
-  live,
-  liveTitle,
-  livePhone,
-  pendingCount,
-  upcoming,
-}: {
-  live: "offered" | "requested" | null;
-  liveTitle: string;
-  livePhone: string | null;
-  pendingCount: number;
-  upcoming: UpItem[];
-}) {
-  // Priority: a ride happening now → requests to review → what's next.
-  if (live) {
-    return (
-      <section className="motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500">
-        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 p-5 text-white shadow-md">
-          <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
-            Happening now
-          </p>
-          <p className="mt-1 text-lg font-semibold">{liveTitle} is on</p>
-          <p className="text-sm text-white/85">
-            {live === "offered"
-              ? "See who you're picking up and call them."
-              : "Sync up with your driver now."}
-          </p>
-          <div className="mt-4 flex gap-2">
-            <Link
-              href={live === "offered" ? "/my-rides?tab=offered" : "/my-rides?tab=requested"}
-              className="flex-1 rounded-lg bg-white/20 py-2 text-center text-sm font-medium hover:bg-white/30"
-            >
-              View details
-            </Link>
-            {livePhone && (
-              <a
-                href={`tel:${livePhone}`}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white py-2 text-sm font-semibold text-indigo-700"
-              >
-                <Phone className="size-4" /> Call
-              </a>
+/* ── The boarding pass ── */
+function BoardingPass({ f }: { f: Featured }) {
+  const toEvent = f.direction === "to_event";
+  const you = splitLoc(f.pickup);
+  const fromMain = toEvent ? you.main : f.eventName;
+  const fromSub = toEvent ? you.sub : "";
+  const toMain = toEvent ? f.eventName : you.main;
+  const toSub = toEvent ? "" : you.sub;
+  const [hm, period] = formatTime(f.time).split(" ");
+
+  return (
+    <article className="rounded-[26px] border bg-card shadow-[0_8px_30px_rgba(28,27,25,0.07)]">
+      <div className="p-6">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--gold-ink)]">
+          {f.kind === "driving" ? "You're driving" : "Your next ride"}
+        </p>
+
+        {/* route */}
+        <div className="mt-3 flex items-start justify-between gap-2">
+          <div className="min-w-0 max-w-[38%]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              From
+            </p>
+            <p className="font-display mt-1 truncate text-lg leading-tight">
+              {fromMain}
+            </p>
+            {fromSub && (
+              <p className="truncate text-xs text-muted-foreground">{fromSub}</p>
+            )}
+          </div>
+
+          <div className="mt-3 flex flex-1 items-center px-1">
+            <span className="size-2 rounded-full bg-foreground" />
+            <span className="h-px flex-1 border-t border-dashed border-foreground/30" />
+            <span className="flex size-8 items-center justify-center rounded-full border bg-[var(--gold-soft)] text-[var(--gold-ink)]">
+              <CarFront className="size-4" />
+            </span>
+            <span className="h-px flex-1 border-t border-dashed border-foreground/30" />
+            <span className="size-2 rounded-full bg-[var(--gold)]" />
+          </div>
+
+          <div className="min-w-0 max-w-[38%] text-right">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              To
+            </p>
+            <p className="font-display mt-1 truncate text-lg leading-tight">
+              {toMain}
+            </p>
+            {toSub && (
+              <p className="truncate text-xs text-muted-foreground">{toSub}</p>
             )}
           </div>
         </div>
-      </section>
-    );
-  }
 
-  if (pendingCount > 0) {
-    return (
-      <section className="motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500">
-        <Link
-          href="/my-rides?tab=offered"
-          className="flex items-center gap-3 rounded-2xl border border-amber-300/70 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10"
-        >
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white">
-            <BellRing className="size-5" />
-          </span>
-          <div className="flex-1">
-            <p className="font-semibold text-amber-900 dark:text-amber-200">
-              {pendingCount} {pendingCount === 1 ? "person wants" : "people want"}{" "}
-              to join
+        <div className="mt-6 flex items-end justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              Departs
             </p>
-            <p className="text-sm text-amber-700 dark:text-amber-300/80">
-              Approve or decline in My Rides.
+            <p className="font-display mt-0.5 text-[30px] leading-none">
+              {hm}
+              <span className="ml-1 text-base text-[var(--gold-ink)]">
+                {period}
+              </span>
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {formatDate(f.date)}
             </p>
           </div>
-          <ChevronRight className="size-5 text-amber-700 dark:text-amber-300" />
-        </Link>
-      </section>
+          <div className="text-right">
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              {f.kind === "driving" ? "Booked" : "Seats"}
+            </p>
+            <p className="font-display mt-0.5 text-[30px] leading-none">
+              {f.kind === "driving" ? `${f.seatsBooked}/${f.seats}` : f.seats}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* perforation */}
+      <div className="relative">
+        <div className="mx-6 border-t border-dashed" />
+        <span className="absolute -left-2 top-1/2 size-4 -translate-y-1/2 rounded-full border bg-background" />
+        <span className="absolute -right-2 top-1/2 size-4 -translate-y-1/2 rounded-full border bg-background" />
+      </div>
+
+      {/* stub */}
+      <Stub f={f} />
+    </article>
+  );
+}
+
+function Stub({ f }: { f: Featured }) {
+  if (f.kind === "driving") {
+    return (
+      <Link
+        href={f.href}
+        className="flex items-center gap-3 p-6"
+      >
+        <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+          <Users className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-base leading-tight">
+            {f.seatsBooked ? `${f.seatsBooked} riding with you` : "No riders yet"}
+          </p>
+          <p className="text-xs text-muted-foreground">Tap to manage this ride</p>
+        </div>
+        <ChevronRight className="size-5 text-muted-foreground" />
+      </Link>
     );
   }
-
-  if (upcoming.length === 0) return null;
-
+  const approved = f.kind === "approved";
   return (
-    <section className="motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500">
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-muted-foreground">
-          Your next {upcoming.length === 1 ? "ride" : "rides"}
+    <div className="flex items-center gap-3 p-6">
+      <span className="flex size-11 items-center justify-center rounded-full bg-secondary font-semibold">
+        {(f.driverName ?? "?").split(" ").map((p) => p[0]).join("").slice(0, 2)}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-display text-base leading-tight">
+          {f.driverName ?? "Driver"}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {approved ? "Confirmed your seat" : "Waiting for approval"}
+        </p>
+      </div>
+      {approved && f.driverPhone ? (
+        <a
+          href={`tel:${f.driverPhone}`}
+          className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+        >
+          <Phone className="size-4" /> Call
+        </a>
+      ) : (
+        <span className="rounded-full bg-[var(--gold-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--gold-ink)]">
+          Pending
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ── Warm empty state (no upcoming rides) ── */
+function EmptyHero({ firstName }: { firstName: string }) {
+  return (
+    <div className="space-y-5">
+      <div className="overflow-hidden rounded-[26px] border bg-card p-6 shadow-[0_8px_30px_rgba(28,27,25,0.06)]">
+        {/* little route illustration */}
+        <div className="flex items-center gap-2 text-[var(--gold-ink)]">
+          <span className="flex size-9 items-center justify-center rounded-full bg-secondary text-foreground">
+            <MapPin className="size-4" />
+          </span>
+          <span className="h-px flex-1 border-t-2 border-dashed border-[var(--gold)]/40" />
+          <span className="flex size-11 items-center justify-center rounded-full bg-[var(--gold-soft)]">
+            <CarFront className="size-5" />
+          </span>
+          <span className="h-px flex-1 border-t-2 border-dashed border-[var(--gold)]/40" />
+          <span className="flex size-9 items-center justify-center rounded-full bg-foreground text-background">
+            <span className="size-2 rounded-full bg-[var(--gold)]" />
+          </span>
+        </div>
+
+        <h2 className="font-display mt-5 text-2xl leading-tight">
+          No rides yet, {firstName}.
         </h2>
-        <Link href="/my-rides" className="text-sm font-medium text-primary">
-          View all
+        <p className="mt-1 text-muted-foreground">
+          Someone from your event is probably already driving. Grab the empty
+          seat — no money ever changes hands.
+        </p>
+
+        <Link
+          href="/rides"
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground active:opacity-90"
+        >
+          <Search className="size-4" /> Find a ride to Hariwan Ashram
+        </Link>
+        <Link
+          href="/rides/new"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-sm font-semibold"
+        >
+          <PlusCircle className="size-4" /> Offer a seat instead
         </Link>
       </div>
-      <ul className="space-y-2">
-        {upcoming.map((item) => (
-          <li key={item.key}>
-            <Link
-              href={item.href}
-              className="flex items-center gap-3 rounded-xl border bg-card p-3 transition-colors hover:border-primary/40"
-            >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                <MapPin className="size-4.5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <RouteLabel
-                  direction={item.direction}
-                  eventName={item.eventName}
-                  className="text-sm"
-                />
-                <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
-                  <Clock className="size-3.5" />
-                  {formatDate(item.date)} · {formatTime(item.time)}
-                </p>
-              </div>
-              <span
-                className={cn(
-                  "shrink-0 rounded-full px-2 py-1 text-xs font-medium",
-                  item.tag.cls,
-                )}
-              >
-                {item.tag.label}
-              </span>
-            </Link>
-          </li>
+
+      {/* how it works */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { Icon: Search, label: "Pick a ride" },
+          { Icon: Hand, label: "Ask for a seat" },
+          { Icon: Handshake, label: "Ride together" },
+        ].map(({ Icon, label }, i) => (
+          <div
+            key={label}
+            className="flex flex-col items-center gap-2 rounded-2xl bg-secondary/60 px-2 py-4 text-center"
+          >
+            <span className="flex size-9 items-center justify-center rounded-full bg-card text-[var(--gold-ink)]">
+              <Icon className="size-4" />
+            </span>
+            <span className="text-xs font-medium leading-tight">
+              <span className="text-muted-foreground">{i + 1}. </span>
+              {label}
+            </span>
+          </div>
         ))}
-      </ul>
-    </section>
+      </div>
+    </div>
   );
 }
 
@@ -284,19 +373,17 @@ function ContactAdmins() {
   const { phone, whatsapp } = APP_CONFIG.support;
   const waNumber = whatsapp.replace(/[^\d]/g, "");
   if (!phone && !waNumber) return null;
-
   return (
-    <section className="flex items-center justify-between gap-3 rounded-xl bg-muted/40 px-4 py-3">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Phone className="size-4" />
-        Need help? Contact Ride Admins
-      </div>
+    <section className="flex items-center justify-between gap-3 rounded-2xl bg-secondary/60 px-4 py-3">
+      <span className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Phone className="size-4" /> Need help? Contact ride admins
+      </span>
       <div className="flex gap-1">
         {phone && (
           <a
             href={`tel:${phone}`}
             aria-label="Call ride admins"
-            className="flex size-9 items-center justify-center rounded-lg text-primary hover:bg-primary/10"
+            className="flex size-9 items-center justify-center rounded-lg text-[var(--gold-ink)] hover:bg-[var(--gold-soft)]"
           >
             <Phone className="size-4.5" />
           </a>
@@ -307,7 +394,7 @@ function ContactAdmins() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="WhatsApp ride admins"
-            className="flex size-9 items-center justify-center rounded-lg text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400"
+            className="flex size-9 items-center justify-center rounded-lg text-[var(--success)] hover:bg-[var(--success)]/10"
           >
             <MessageCircle className="size-4.5" />
           </a>

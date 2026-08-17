@@ -5,90 +5,100 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Book My Ride — design tokens.
- * Calm indigo primary + confirm-green success accent, flat & premium.
+ * OneRide — warm editorial-premium design tokens.
+ * Paper + ink + gold. Calistoga (display) + Inter (body).
  * Colours are swappable here without touching component code.
  */
 :root {
-  --radius: 0.75rem;
+  --radius: 1rem;
 
-  --background: #ffffff;
-  --foreground: #1a1a2e;
+  --background: #faf7f1; /* warm paper */
+  --foreground: #1c1b19; /* warm ink */
 
   --card: #ffffff;
-  --card-foreground: #1a1a2e;
+  --card-foreground: #1c1b19;
 
   --popover: #ffffff;
-  --popover-foreground: #1a1a2e;
+  --popover-foreground: #1c1b19;
 
-  /* Brand: calm indigo */
-  --primary: #4f46e5;
-  --primary-foreground: #ffffff;
+  /* Ink — used for primary CTAs (premium black-on-cream) */
+  --primary: #1c1b19;
+  --primary-foreground: #faf7f1;
 
-  --secondary: #f1f0fb;
-  --secondary-foreground: #312e81;
+  --secondary: #f2ece1;
+  --secondary-foreground: #3a352d;
 
-  --muted: #f5f5f7;
-  --muted-foreground: #6b7280;
+  --muted: #f2ece1;
+  --muted-foreground: #6c665c;
 
-  /* Neutral hover/subtle surface (shadcn uses --accent for hovers) */
-  --accent: #f1f0fb;
-  --accent-foreground: #312e81;
+  /* Neutral hover surface (shadcn uses --accent for hovers) */
+  --accent: #f2ece1;
+  --accent-foreground: #1c1b19;
 
-  /* Positive / confirm CTA (Request Seat, Approve) */
-  --success: #16a34a;
+  /* Confirm / positive */
+  --success: #2e7d53;
   --success-foreground: #ffffff;
 
-  --destructive: #dc2626;
+  --destructive: #c0362c;
   --destructive-foreground: #ffffff;
 
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --ring: #4f46e5;
+  --border: #e8e1d5;
+  --input: #e8e1d5;
+  --ring: #b4690e;
 
-  /* Trust/role badges */
-  --teacher: #7c3aed;
+  /* Signature gold accent */
+  --gold: #b4690e;
+  --gold-soft: #f6e8d3;
+  --gold-ink: #7a4708;
+
+  /* Trust/role badges (warm) */
+  --teacher: #b4690e;
   --teacher-foreground: #ffffff;
-  --female: #db2777;
+  --female: #b4476b;
   --female-foreground: #ffffff;
 }
 
 .dark {
-  --background: #0f0f16;
-  --foreground: #ececf1;
+  --background: #1a1815; /* warm near-black */
+  --foreground: #f2ede3;
 
-  --card: #16161f;
-  --card-foreground: #ececf1;
+  --card: #232019;
+  --card-foreground: #f2ede3;
 
-  --popover: #16161f;
-  --popover-foreground: #ececf1;
+  --popover: #232019;
+  --popover-foreground: #f2ede3;
 
-  --primary: #7c6ff0;
-  --primary-foreground: #0f0f16;
+  --primary: #f2ede3; /* cream CTAs on warm dark */
+  --primary-foreground: #1a1815;
 
-  --secondary: #232333;
-  --secondary-foreground: #e4e4f0;
+  --secondary: #2b2720;
+  --secondary-foreground: #e8e0d2;
 
-  --muted: #1e1e29;
-  --muted-foreground: #a1a1aa;
+  --muted: #2b2720;
+  --muted-foreground: #a49b8c;
 
-  --accent: #232333;
-  --accent-foreground: #e4e4f0;
+  --accent: #2b2720;
+  --accent-foreground: #f2ede3;
 
-  --success: #22c55e;
-  --success-foreground: #06210f;
+  --success: #58b083;
+  --success-foreground: #10241a;
 
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
+  --destructive: #e2685c;
+  --destructive-foreground: #1a1815;
 
-  --border: #2a2a38;
-  --input: #2a2a38;
-  --ring: #7c6ff0;
+  --border: #35302700;
+  --border: #34302a;
+  --input: #34302a;
+  --ring: #d99a4e;
 
-  --teacher: #a78bfa;
-  --teacher-foreground: #0f0f16;
-  --female: #f472b6;
-  --female-foreground: #0f0f16;
+  --gold: #d99a4e;
+  --gold-soft: #3a2e1c;
+  --gold-ink: #e9b872;
+
+  --teacher: #d99a4e;
+  --teacher-foreground: #1a1815;
+  --female: #d98aa6;
+  --female-foreground: #1a1815;
 }
 
 /* Map tokens to Tailwind utilities (bg-primary, text-muted-foreground, …). */
@@ -114,18 +124,21 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-ink: var(--gold-ink);
   --color-teacher: var(--teacher);
   --color-teacher-foreground: var(--teacher-foreground);
   --color-female: var(--female);
   --color-female-foreground: var(--female-foreground);
 
-  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-calistoga), Georgia, "Times New Roman", serif;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 6px);
 }
 
 @layer base {
@@ -138,10 +151,13 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1,
-  h2,
-  h3,
-  h4 {
-    font-family: var(--font-heading);
+  /* Big page titles get the warm display serif; small labels stay Inter. */
+  h1 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
   }
 }
