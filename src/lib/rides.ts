@@ -1,5 +1,7 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import type {
   EventLocation,
   MyRequest,
@@ -17,6 +19,24 @@ export async function getEventLocations(): Promise<EventLocation[]> {
     .order("created_at", { ascending: true });
   return (data as EventLocation[]) ?? [];
 }
+
+/**
+ * Active event locations, cached for an hour. They change rarely, so this
+ * avoids a Supabase round-trip on every Find / Offer page load.
+ */
+export const getCachedEventLocations = unstable_cache(
+  async (): Promise<EventLocation[]> => {
+    const supabase = createServiceClient();
+    const { data } = await supabase
+      .from("event_locations")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: true });
+    return (data as EventLocation[]) ?? [];
+  },
+  ["active-event-locations"],
+  { revalidate: 3600, tags: ["event-locations"] },
+);
 
 export async function getRideFeed(
   direction: RideDirection,

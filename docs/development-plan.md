@@ -1,10 +1,10 @@
 # Book My Ride — Development Plan (v1)
 
-> Working name **"Book My Ride"** (from PDF: *Hariwan Ashram Carpool*). The app name is a
+> Working name **"Book My Ride"** (from PDF: *Harivan Ashram Carpool*). The app name is a
 > single configurable variable so it can be changed without touching UI code.
 
 A simple, premium, low-cognitive-load ride-share board for an Art of Living community.
-Users post rides to/from an **admin-defined event location** (e.g. *Hariwan Ashram*),
+Users post rides to/from an **admin-defined event location** (e.g. *Harivan Ashram*),
 browse rides, request a seat, and coordinate offline by phone. **No payments, no in-app
 chat, no live tracking** (per MVP scope).
 
@@ -77,7 +77,7 @@ profiles (1:1 auth.users)
 
 event_locations
   id uuid PK
-  name text                  -- "Hariwan Ashram"
+  name text                  -- "Harivan Ashram"
   address text
   lat / lng numeric
   maps_url text
@@ -187,7 +187,7 @@ Each phase is independently demoable.
   Supabase project + local env, `@supabase/ssr` clients, CI-less Vercel preview.
 - **Phase 1 — Auth & Onboarding:** Google OAuth, `profiles` table + RLS, onboarding form
   (phone, photo upload to Storage, gender, role), route-guard middleware.
-- **Phase 2 — Event Locations:** table + RLS + admin CRUD; seed *Hariwan Ashram*.
+- **Phase 2 — Event Locations:** table + RLS + admin CRUD; seed *Harivan Ashram*.
 - **Phase 3 — Post Ride:** one-screen going+return, Leaflet pin + Nominatim search,
   two-rides creation, public-phone toggle.
 - **Phase 4 — Browse & Request:** list + filters (direction/date), `get_ride_cards` RPC with

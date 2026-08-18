@@ -58,8 +58,8 @@ create policy "locations_admin_write"
 
 -- Seed the first event location (admin can edit coords/link precisely later).
 insert into public.event_locations (name, address, lat, lng, maps_url)
-select 'Hariwan Ashram', 'Tricity (Chandigarh region)', 30.7333, 76.7794,
-       'https://www.google.com/maps/search/?api=1&query=Hariwan+Ashram'
+select 'Harivan Ashram', 'Tricity (Chandigarh region)', 30.7333, 76.7794,
+       'https://www.google.com/maps/search/?api=1&query=Harivan+Ashram'
 where not exists (select 1 from public.event_locations);
 
 -- ---------- rides ----------

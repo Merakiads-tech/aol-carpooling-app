@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getProfile } from "@/lib/auth";
-import { getEventLocations } from "@/lib/rides";
+import { getCachedEventLocations } from "@/lib/rides";
 import { todayISO } from "@/lib/format";
 import { RideListSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export default async function RidesPage({
   // Shell data (fast, cached) — keeps the filter bar responsive.
   const [profile, locations] = await Promise.all([
     getProfile(),
-    getEventLocations(),
+    getCachedEventLocations(),
   ]);
   const isFemale = profile?.gender === "female";
   const eventName = locations[0]?.name ?? "event";

@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { notifyResponse } from "@/lib/notify";
 import type { RideStatus } from "@/lib/types";
 
 async function run(name: string, args: Record<string, unknown>) {
@@ -17,10 +19,13 @@ export async function respondToRequestAction(
   requestId: string,
   approve: boolean,
 ) {
-  return run("respond_to_request", {
+  const res = await run("respond_to_request", {
     p_request_id: requestId,
     p_approve: approve,
   });
+  // Email the rider (approved / declined) after the response is sent.
+  if (!res.error) after(() => notifyResponse(requestId, approve));
+  return res;
 }
 
 export async function cancelRequestAction(requestId: string) {

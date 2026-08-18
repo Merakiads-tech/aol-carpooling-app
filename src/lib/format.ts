@@ -13,6 +13,17 @@ export function formatDate(dateStr: string): string {
   return `${DAYS[dt.getDay()]}, ${d} ${MONTHS[m - 1]}`;
 }
 
+const WEEKDAY_FULL = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+];
+
+/** "2026-08-17" → "Monday, 17 Aug 2026". */
+export function formatLongDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return `${WEEKDAY_FULL[dt.getDay()]}, ${d} ${MONTHS[m - 1]} ${y}`;
+}
+
 /** "07:00" → "7:00 AM". */
 export function formatTime(timeStr: string): string {
   const [hStr, min] = timeStr.split(":");

@@ -135,7 +135,7 @@ export default async function HomePage() {
       >
         <span className="flex items-center gap-3">
           <Search className="size-5 text-[var(--gold-ink)]" />
-          <span className="font-semibold">Browse rides to Hariwan Ashram</span>
+          <span className="font-semibold">Browse rides to Harivan Ashram</span>
         </span>
         <ArrowRight className="size-5 text-muted-foreground" />
       </Link>
@@ -334,7 +334,7 @@ function EmptyHero({ firstName }: { firstName: string }) {
           href="/rides"
           className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground active:opacity-90"
         >
-          <Search className="size-4" /> Find a ride to Hariwan Ashram
+          <Search className="size-4" /> Find a ride to Harivan Ashram
         </Link>
         <Link
           href="/rides/new"

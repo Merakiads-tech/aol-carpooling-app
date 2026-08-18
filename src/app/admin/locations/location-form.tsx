@@ -37,7 +37,7 @@ export function LocationForm({
           id="name"
           name="name"
           defaultValue={initial?.name ?? ""}
-          placeholder="Hariwan Ashram"
+          placeholder="Harivan Ashram"
           required
         />
       </div>

@@ -26,7 +26,7 @@ export default async function LoginPage({
           together.
         </h1>
         <p className="mt-4 max-w-[30ch] text-[15px] leading-relaxed text-muted-foreground">
-          Community carpooling to Hariwan Ashram. Ask a neighbour for the empty
+          Community carpooling to Harivan Ashram. Ask a neighbour for the empty
           seat and ride along — no money ever changes hands.
         </p>
 
@@ -47,7 +47,7 @@ export default async function LoginPage({
           </div>
           <div className="mt-3 flex items-center justify-between text-xs font-medium">
             <span>Your pickup</span>
-            <span className="text-muted-foreground">Hariwan Ashram</span>
+            <span className="text-muted-foreground">Harivan Ashram</span>
           </div>
         </div>
       </div>

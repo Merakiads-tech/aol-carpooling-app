@@ -4,8 +4,8 @@ import type { RideDirection } from "@/lib/types";
 
 /**
  * Plain-language ride direction:
- *   to_event:   Going to Hariwan Ashram
- *   from_event: Return from Hariwan Ashram
+ *   to_event:   Going to Harivan Ashram
+ *   from_event: Return from Harivan Ashram
  */
 export function RouteLabel({
   direction,
