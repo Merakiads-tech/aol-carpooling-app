@@ -26,6 +26,10 @@ export default async function MyRidesPage({
     (n, r) => n + r.requests.filter((q) => q.status === "pending").length,
     0,
   );
+  // Tab counts reflect only current/upcoming rides — past rides are hidden by
+  // default in the agenda, so counting them would be misleading.
+  const upcomingOffered = offered.filter((r) => r.depart_date >= today).length;
+  const upcomingRequests = requests.filter((r) => r.depart_date >= today).length;
 
   return (
     <div className="space-y-5">
@@ -40,7 +44,7 @@ export default async function MyRidesPage({
       <Tabs defaultValue={defaultTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="offered" className="relative">
-            Offered ({offered.length})
+            Offered ({upcomingOffered})
             {pendingTotal > 0 && (
               <span className="ml-1.5 flex min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold text-destructive-foreground">
                 {pendingTotal}
@@ -48,7 +52,7 @@ export default async function MyRidesPage({
             )}
           </TabsTrigger>
           <TabsTrigger value="requested">
-            Requested ({requests.length})
+            Requested ({upcomingRequests})
           </TabsTrigger>
         </TabsList>
 
