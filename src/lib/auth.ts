@@ -4,16 +4,20 @@ import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 
 /**
- * The authenticated Supabase user, or null. Verified against the auth server.
- * Wrapped in cache() so repeated calls in one request (layout + page) hit the
- * network only once.
+ * The authenticated user (id + email), or null. Verified by checking the JWT
+ * signature locally against the project's asymmetric signing keys (cached
+ * JWKS) via getClaims() — no auth-server round-trip on each render. cache()
+ * still dedupes repeated calls within a single request (layout + page).
  */
 export const getUser = cache(async () => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims?.sub) return null;
+  return {
+    id: claims.sub as string,
+    email: (claims.email as string | undefined) ?? null,
+  };
 });
 
 /** The current user's profile row, or null if signed out. Deduped per request. */

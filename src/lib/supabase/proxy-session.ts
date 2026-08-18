@@ -32,10 +32,12 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // IMPORTANT: getUser() revalidates the token and refreshes cookies.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() verifies the JWT locally against the project's asymmetric
+  // signing keys (ES256) using a cached JWKS — no round-trip to the auth
+  // server on every navigation/prefetch. It still refreshes expiring tokens
+  // (and writes new cookies via setAll) through the underlying getSession().
+  const { data: claims } = await supabase.auth.getClaims();
+  const user = claims?.claims ?? null;
 
   const { pathname } = request.nextUrl;
   const isAuthRoute = pathname === "/login" || pathname.startsWith("/auth");
