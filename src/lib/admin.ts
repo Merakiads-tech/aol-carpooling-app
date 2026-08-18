@@ -24,20 +24,37 @@ export async function requireAdmin() {
 }
 
 export type AdminStats = {
-  rides_active: number;
+  rides_today: number;
+  rides_upcoming: number;
   rides_total: number;
-  requests_pending: number;
-  seats_total: number;
+  seats_offered: number;
   seats_filled: number;
+  req_pending: number;
+  req_approved: number;
+  req_declined: number;
   users: number;
+  users_incomplete: number;
 };
 
-export type PendingRequest = {
+/** One day of upcoming ride volume — powers the overview bar chart. */
+export type RideDay = {
+  date: string;
+  going: number;
+  returning: number;
+  pending: number;
+};
+
+/** A pending seat request on a today-or-later ride (the action queue). */
+export type PendingNow = {
   id: string;
   created_at: string;
-  ride: { depart_date: string; depart_time: string; direction: string; event: string };
+  depart_date: string;
+  depart_time: string;
+  direction: RideDirection;
+  event: string;
+  seats: number;
   driver: { name: string | null; phone: string | null };
-  rider: { name: string | null };
+  rider: { name: string | null; phone: string | null };
 };
 
 export type AdminUser = {
@@ -57,10 +74,16 @@ export async function getAdminStats(): Promise<AdminStats | null> {
   return (data as AdminStats) ?? null;
 }
 
-export async function getPendingRequests(): Promise<PendingRequest[]> {
+export async function getRidesByDay(): Promise<RideDay[]> {
   const supabase = await createClient();
-  const { data } = await supabase.rpc("admin_pending_requests");
-  return (data as PendingRequest[]) ?? [];
+  const { data } = await supabase.rpc("admin_rides_by_day");
+  return (data as RideDay[]) ?? [];
+}
+
+export async function getPendingNow(): Promise<PendingNow[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("admin_pending_now");
+  return (data as PendingNow[]) ?? [];
 }
 
 export async function getAdminUsers(): Promise<AdminUser[]> {
@@ -92,6 +115,12 @@ export type AdminRide = {
     role: string;
   };
   requests: { pending: number; approved: number; total: number };
+  riders: {
+    name: string | null;
+    phone: string | null;
+    status: "pending" | "approved" | "declined";
+    seats: number;
+  }[];
 };
 
 export async function getAllRides(): Promise<AdminRide[]> {
