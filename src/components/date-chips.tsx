@@ -55,12 +55,10 @@ export function DateChips({
   const countFor = (iso: string) => counts?.[iso] ?? 0;
 
   return (
-    <div
-      className={cn(
-        "flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-        pending && "opacity-60",
-      )}
-    >
+    <div className={cn("flex items-start gap-2", pending && "opacity-60")}>
+      {/* Quick days scroll horizontally; pt gives the count badges room so the
+          horizontal-scroll container doesn't clip them at the top. */}
+      <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1 pr-1.5 pt-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {quick.map((iso, i) => {
         const active = value === iso;
         const top = i === 0 ? "Today" : i === 1 ? "Tomorrow" : weekday(iso);
@@ -92,7 +90,10 @@ export function DateChips({
           </button>
         );
       })}
+      </div>
 
+      {/* "Pick date" is pinned outside the scroll row so it's always visible. */}
+      <div className="shrink-0 pt-3">
       <Popover>
         <PopoverTrigger asChild>
           <button
@@ -133,6 +134,7 @@ export function DateChips({
           />
         </PopoverContent>
       </Popover>
+      </div>
     </div>
   );
 }
