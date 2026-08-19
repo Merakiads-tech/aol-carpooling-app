@@ -52,6 +52,19 @@ export async function getRideFeed(
   return (data as RideCard[]) ?? [];
 }
 
+/**
+ * All upcoming rides (both directions) from `from` onward, in one call, so the
+ * Find tab can filter by date / direction entirely client-side (instant) and
+ * show per-date counts. Same masking as {@link getRideFeed}.
+ */
+export async function getUpcomingRideFeed(from: string): Promise<RideCard[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("get_ride_feed_upcoming", {
+    p_from: from,
+  });
+  return (data as RideCard[]) ?? [];
+}
+
 export async function getRideDetail(id: string): Promise<RideCard | null> {
   const supabase = await createClient();
   const { data } = await supabase.rpc("get_ride_detail", { p_ride_id: id });

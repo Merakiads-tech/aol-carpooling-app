@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getProfile } from "@/lib/auth";
-import { getCachedEventLocations } from "@/lib/rides";
+import { getCachedEventLocations, getUpcomingRideFeed } from "@/lib/rides";
 import { todayISO } from "@/lib/format";
-import { RideListSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import { COPY } from "@/config/app";
-import { FilterBar } from "./filter-bar";
-import { RideResults } from "./ride-results";
+import { FindClient } from "./find-client";
 import type { RideDirection } from "@/lib/types";
 
 export const metadata: Metadata = { title: COPY.findRide };
@@ -26,14 +23,15 @@ export default async function RidesPage({
   const date = sp.date ?? today;
   const womenParam = sp.women === "1";
 
-  // Shell data (fast, cached) — keeps the filter bar responsive.
-  const [profile, locations] = await Promise.all([
+  // One fetch: all upcoming rides (both directions). The client filters by
+  // date / direction instantly — no round-trip per switch.
+  const [profile, locations, rides] = await Promise.all([
     getProfile(),
     getCachedEventLocations(),
+    getUpcomingRideFeed(today),
   ]);
   const isFemale = profile?.gender === "female";
   const eventName = locations[0]?.name ?? "event";
-  const womenOnly = womenParam && isFemale;
 
   return (
     <div className="space-y-5">
@@ -51,22 +49,15 @@ export default async function RidesPage({
 
       <h1 className="text-xl font-semibold">{COPY.findRide}</h1>
 
-      <FilterBar
-        eventName={eventName}
-        isFemale={isFemale}
-        direction={direction}
-        date={date}
+      <FindClient
+        rides={rides}
         today={today}
-        womenOnly={womenOnly}
+        initialDirection={direction}
+        initialDate={date}
+        initialWomenOnly={womenParam && isFemale}
+        isFemale={isFemale}
+        eventName={eventName}
       />
-
-      {/* Only the list streams/suspends — the filters above stay interactive. */}
-      <Suspense
-        key={`${direction}-${date}-${womenOnly}`}
-        fallback={<RideListSkeleton count={3} />}
-      >
-        <RideResults direction={direction} date={date} womenOnly={womenOnly} />
-      </Suspense>
     </div>
   );
 }
