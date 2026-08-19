@@ -3,7 +3,6 @@ import { Car, LogOut, Shield } from "lucide-react";
 import { APP_CONFIG } from "@/config/app";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { isAdminEmail } from "@/lib/admin";
 import type { Profile } from "@/lib/types";
 
 function initials(name: string | null) {
@@ -16,7 +15,13 @@ function initials(name: string | null) {
     .toUpperCase();
 }
 
-export function AppHeader({ profile }: { profile: Profile }) {
+export function AppHeader({
+  profile,
+  isAdmin,
+}: {
+  profile: Profile;
+  isAdmin: boolean;
+}) {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between px-4">
@@ -29,7 +34,7 @@ export function AppHeader({ profile }: { profile: Profile }) {
 
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          {isAdminEmail(profile.email) && (
+          {isAdmin && (
             <Link
               href="/admin"
               aria-label="Admin dashboard"

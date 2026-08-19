@@ -1,25 +1,27 @@
 import "server-only";
+import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { EventLocation, RideDirection, RideStatus } from "@/lib/types";
 
-export function adminEmails(): string[] {
-  return (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-}
-
-export function isAdminEmail(email?: string | null): boolean {
-  return !!email && adminEmails().includes(email.toLowerCase());
-}
+/**
+ * Whether the signed-in user is an admin. The single source of truth is the
+ * public.app_admins table, checked via the is_admin() RPC (which matches the
+ * caller's own JWT email). cache() dedupes it within a request (the header and
+ * the /admin gate both ask). Add/remove admins by editing app_admins only.
+ */
+export const isCurrentUserAdmin = cache(async (): Promise<boolean> => {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("is_admin");
+  return data === true;
+});
 
 /** Redirect to login if signed out, 404 if signed in but not an admin. */
 export async function requireAdmin() {
   const user = await getUser();
   if (!user) redirect("/login");
-  if (!isAdminEmail(user.email)) notFound();
+  if (!(await isCurrentUserAdmin())) notFound();
   return user;
 }
 

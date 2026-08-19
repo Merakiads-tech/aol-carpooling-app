@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/auth";
+import { isCurrentUserAdmin } from "@/lib/admin";
 import { getMyPendingRequestCount } from "@/lib/rides";
 import { AppHeader } from "./_components/app-header";
 import { BottomNav } from "./_components/bottom-nav";
@@ -13,13 +14,14 @@ export default async function AppLayout({
   if (!profile) redirect("/login");
   if (!profile.is_complete) redirect("/onboarding");
 
-  // Profile is already resolved above; this runs in parallel-friendly fashion
-  // (cache() dedupes the auth lookup it shares with the page).
-  const pendingCount = await getMyPendingRequestCount();
+  const [pendingCount, isAdmin] = await Promise.all([
+    getMyPendingRequestCount(),
+    isCurrentUserAdmin(),
+  ]);
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <AppHeader profile={profile} />
+      <AppHeader profile={profile} isAdmin={isAdmin} />
       <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-6">{children}</div>
       <BottomNav pendingCount={pendingCount} />
     </div>
