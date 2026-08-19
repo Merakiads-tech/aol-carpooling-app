@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Car, LogOut, Shield } from "lucide-react";
+import { Car, LogOut } from "lucide-react";
 import { APP_CONFIG } from "@/config/app";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -15,13 +15,7 @@ function initials(name: string | null) {
     .toUpperCase();
 }
 
-export function AppHeader({
-  profile,
-  isAdmin,
-}: {
-  profile: Profile;
-  isAdmin: boolean;
-}) {
+export function AppHeader({ profile }: { profile: Profile }) {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between px-4">
@@ -34,15 +28,6 @@ export function AppHeader({
 
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          {isAdmin && (
-            <Link
-              href="/admin"
-              aria-label="Admin dashboard"
-              className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-              <Shield className="size-4.5" aria-hidden />
-            </Link>
-          )}
           <Avatar className="size-8">
             <AvatarImage src={profile.photo_url ?? undefined} alt="" />
             <AvatarFallback>{initials(profile.full_name)}</AvatarFallback>
