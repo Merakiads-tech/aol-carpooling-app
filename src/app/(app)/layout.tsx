@@ -13,8 +13,6 @@ export default async function AppLayout({
   if (!profile) redirect("/login");
   if (!profile.is_complete) redirect("/onboarding");
 
-  // Profile is already resolved above; this runs in parallel-friendly fashion
-  // (cache() dedupes the auth lookup it shares with the page).
   const pendingCount = await getMyPendingRequestCount();
 
   return (

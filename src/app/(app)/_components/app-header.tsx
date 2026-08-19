@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { Car, LogOut, Shield } from "lucide-react";
+import { Car, LogOut } from "lucide-react";
 import { APP_CONFIG } from "@/config/app";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { isAdminEmail } from "@/lib/admin";
 import type { Profile } from "@/lib/types";
 
 function initials(name: string | null) {
@@ -29,15 +28,6 @@ export function AppHeader({ profile }: { profile: Profile }) {
 
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          {isAdminEmail(profile.email) && (
-            <Link
-              href="/admin"
-              aria-label="Admin dashboard"
-              className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-              <Shield className="size-4.5" aria-hidden />
-            </Link>
-          )}
           <Avatar className="size-8">
             <AvatarImage src={profile.photo_url ?? undefined} alt="" />
             <AvatarFallback>{initials(profile.full_name)}</AvatarFallback>

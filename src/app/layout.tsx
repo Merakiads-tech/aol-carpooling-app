@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Calistoga, Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { APP_CONFIG } from "@/config/app";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -47,6 +48,7 @@ export default function RootLayout({
           {children}
           <Toaster position="top-center" richColors />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
