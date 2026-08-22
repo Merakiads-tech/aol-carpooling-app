@@ -26,8 +26,13 @@ export function RidesByDayChart({ days }: { days: RideDay[] }) {
               className="flex min-w-0 flex-1 flex-col items-center gap-1"
               title={`${d.date}: ${d.going} going, ${d.returning} return, ${d.pending} pending`}
             >
-              <span className="h-3.5 text-[10px] font-bold tabular-nums leading-none text-amber-600 dark:text-amber-400">
-                {d.pending > 0 ? d.pending : ""}
+              <span className="flex h-3.5 items-baseline justify-center gap-px text-[10px] font-bold leading-none">
+                {total > 0 && <span className="tabular-nums">{total}</span>}
+                {d.pending > 0 && (
+                  <span className="tabular-nums text-amber-600 dark:text-amber-400">
+                    ·{d.pending}
+                  </span>
+                )}
               </span>
               <div className="relative w-full max-w-[26px] flex-1 rounded-md bg-muted/50">
                 {total > 0 && (
@@ -60,8 +65,9 @@ export function RidesByDayChart({ days }: { days: RideDay[] }) {
         <Legend swatch="bg-primary" label="Going" />
         <Legend swatch="bg-[var(--gold)]" label="Return" />
         <span className="inline-flex items-center gap-1.5">
-          <span className="font-bold text-amber-600 dark:text-amber-400">N</span>
-          = pending, shown above the day
+          <span className="font-bold">N</span>= rides,
+          <span className="font-bold text-amber-600 dark:text-amber-400">·N</span>
+          = pending
         </span>
       </div>
     </div>

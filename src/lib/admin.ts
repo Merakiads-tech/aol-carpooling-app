@@ -59,6 +59,38 @@ export type PendingNow = {
   rider: { name: string | null; phone: string | null };
 };
 
+/**
+ * Derived community impact. Every approved seat is one car that didn't make
+ * the trip; distance is the straight-line pickup -> event distance, with the
+ * median mapped distance standing in for rides posted without coordinates.
+ * The assumptions ride along so the UI can show its working.
+ */
+export type AdminImpact = {
+  /** Seats actually carried (approved requests). */
+  seats_shared: number;
+  /** Distinct riders who got a seat. */
+  people: number;
+  /** Rides that carried at least one rider. */
+  trips: number;
+  car_km_saved: number;
+  fuel_saved_l: number;
+  co2_saved_kg: number;
+  median_trip_km: number;
+  rides_mapped: number;
+  rides_total: number;
+  km_per_litre: number;
+  co2_per_litre: number;
+};
+
+/** Driver decision latency over the 50 most recent answered requests. */
+export type AdminResponseTime = {
+  sample: number;
+  median_minutes: number;
+  avg_minutes: number;
+  within_hour: number;
+  within_day: number;
+};
+
 export type AdminUser = {
   id: string;
   name: string | null;
@@ -86,6 +118,18 @@ export async function getPendingNow(): Promise<PendingNow[]> {
   const supabase = await createClient();
   const { data } = await supabase.rpc("admin_pending_now");
   return (data as PendingNow[]) ?? [];
+}
+
+export async function getAdminImpact(): Promise<AdminImpact | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("admin_impact");
+  return (data as AdminImpact) ?? null;
+}
+
+export async function getAdminResponseTime(): Promise<AdminResponseTime | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("admin_response_time");
+  return (data as AdminResponseTime) ?? null;
 }
 
 export async function getAdminUsers(): Promise<AdminUser[]> {

@@ -1,6 +1,23 @@
 import Link from "next/link";
-import { CalendarDays, CarFront, Clock, Phone, Users2 } from "lucide-react";
-import { getAdminStats, getPendingNow, getRidesByDay } from "@/lib/admin";
+import {
+  CalendarDays,
+  CarFront,
+  Clock,
+  Fuel,
+  Leaf,
+  Phone,
+  Route,
+  Timer,
+  Users2,
+  UsersRound,
+} from "lucide-react";
+import {
+  getAdminImpact,
+  getAdminResponseTime,
+  getAdminStats,
+  getPendingNow,
+  getRidesByDay,
+} from "@/lib/admin";
 import { formatDate, formatTime, directionLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { LiveRefresh } from "./_components/live-refresh";
@@ -10,10 +27,12 @@ import { FillBar, RequestPipeline, RidesByDayChart } from "./_components/charts"
 export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
-  const [stats, days, pending] = await Promise.all([
+  const [stats, days, pending, impact, speed] = await Promise.all([
     getAdminStats(),
     getRidesByDay(),
     getPendingNow(),
+    getAdminImpact(),
+    getAdminResponseTime(),
   ]);
 
   const s = stats ?? {
@@ -69,7 +88,7 @@ export default async function AdminOverviewPage() {
         <div className="rounded-2xl border bg-card p-5">
           <h2 className="text-sm font-medium">Rides · next 14 days</h2>
           <p className="mb-4 text-xs text-muted-foreground">
-            Volume by day, split by direction
+            Count by day, split by direction
           </p>
           <RidesByDayChart days={days} />
         </div>
@@ -77,7 +96,7 @@ export default async function AdminOverviewPage() {
         <div className="rounded-2xl border bg-card p-5">
           <h2 className="text-sm font-medium">Requests &amp; seats</h2>
           <p className="mb-4 text-xs text-muted-foreground">
-            Across upcoming rides
+            Rides departing today or later · hidden rides excluded
           </p>
           <RequestPipeline
             pending={s.req_pending}
@@ -87,6 +106,100 @@ export default async function AdminOverviewPage() {
           <div className="mt-5 border-t pt-4">
             <FillBar filled={s.seats_filled} offered={s.seats_offered} />
           </div>
+        </div>
+      </div>
+
+      {/* Community impact + how fast drivers answer */}
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="rounded-2xl border bg-card p-5 md:col-span-2">
+          <h2 className="text-sm font-medium">Community impact</h2>
+          <p className="mb-4 text-xs text-muted-foreground">
+            All-time, from every seat a driver actually gave away
+          </p>
+          {impact && impact.seats_shared > 0 ? (
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <Impact
+                  icon={UsersRound}
+                  value={impact.seats_shared.toLocaleString("en-IN")}
+                  label="seats shared"
+                  hint={`${impact.people} people · ${impact.trips} rides`}
+                />
+                <Impact
+                  icon={Route}
+                  value={`${impact.car_km_saved.toLocaleString("en-IN")} km`}
+                  label="car travel avoided"
+                  hint={`~${impact.median_trip_km} km typical trip`}
+                />
+                <Impact
+                  icon={Fuel}
+                  value={`${impact.fuel_saved_l.toLocaleString("en-IN")} L`}
+                  label="fuel saved"
+                  hint={`at ${impact.km_per_litre} km/L`}
+                />
+                <Impact
+                  icon={Leaf}
+                  value={`${impact.co2_saved_kg.toLocaleString("en-IN")} kg`}
+                  label="CO₂ avoided"
+                  hint={`at ${impact.co2_per_litre} kg/L petrol`}
+                  accent
+                />
+              </div>
+              <p className="mt-4 border-t pt-3 text-xs leading-relaxed text-muted-foreground">
+                Estimated, not metered: each shared seat counts as one car that
+                didn&apos;t make the trip, over the straight-line distance from
+                pickup to the event. {impact.rides_mapped} of{" "}
+                {impact.rides_total} rides have a mapped pickup; the rest use
+                the {impact.median_trip_km} km median. Real road distance is
+                longer, so these are conservative.
+              </p>
+            </>
+          ) : (
+            <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+              No seats shared yet — impact shows up once drivers start approving
+              riders.
+            </p>
+          )}
+        </div>
+
+        <div className="rounded-2xl border bg-card p-5">
+          <h2 className="text-sm font-medium">Driver response time</h2>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Last {speed?.sample ?? 0} answered request
+            {speed?.sample === 1 ? "" : "s"}
+          </p>
+          {speed && speed.sample > 0 ? (
+            <>
+              <div className="flex items-center gap-2">
+                <Timer className="size-4 text-muted-foreground" />
+                <span className="text-3xl font-semibold tabular-nums">
+                  {duration(speed.median_minutes)}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                typical (median) wait for a yes or no
+              </p>
+              <dl className="mt-4 space-y-1.5 border-t pt-3 text-xs">
+                <Row
+                  label="Answered within an hour"
+                  value={`${speed.within_hour} of ${speed.sample}`}
+                />
+                <Row
+                  label="Answered within a day"
+                  value={`${speed.within_day} of ${speed.sample}`}
+                />
+                <Row label="Average" value={duration(speed.avg_minutes)} />
+              </dl>
+              <p className="mt-3 text-xs text-muted-foreground">
+The average runs well ahead of the median when a few
+                requests sit unanswered for days.
+              </p>
+            </>
+          ) : (
+            <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+              No answered requests yet.
+            </p>
+          )}
         </div>
       </div>
 
@@ -134,6 +247,64 @@ export default async function AdminOverviewPage() {
           </ul>
         )}
       </section>
+    </div>
+  );
+}
+
+/** "95" -> "1h 35m". Minutes are what the RPC returns. */
+function duration(minutes: number): string {
+  if (minutes < 1) return "under a minute";
+  if (minutes < 60) return `${Math.round(minutes)}m`;
+  const h = Math.floor(minutes / 60);
+  if (h < 24) {
+    const m = Math.round(minutes % 60);
+    return m ? `${h}h ${m}m` : `${h}h`;
+  }
+  const d = Math.floor(h / 24);
+  const rh = h % 24;
+  return rh ? `${d}d ${rh}h` : `${d}d`;
+}
+
+function Impact({
+  icon: Icon,
+  value,
+  label,
+  hint,
+  accent,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  value: string;
+  label: string;
+  hint: string;
+  accent?: boolean;
+}) {
+  return (
+    <div>
+      <Icon
+        className={cn(
+          "size-4",
+          accent ? "text-[var(--success)]" : "text-muted-foreground",
+        )}
+      />
+      <p
+        className={cn(
+          "mt-1.5 text-2xl font-semibold tabular-nums leading-none",
+          accent && "text-[var(--success)]",
+        )}
+      >
+        {value}
+      </p>
+      <p className="mt-1 text-xs font-medium">{label}</p>
+      <p className="text-xs text-muted-foreground">{hint}</p>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-medium tabular-nums">{value}</dd>
     </div>
   );
 }
