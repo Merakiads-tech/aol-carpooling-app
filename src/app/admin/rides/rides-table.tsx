@@ -1,16 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { toast } from "sonner";
 import {
   ArrowRight,
   ChevronDown,
+  Eye,
+  EyeOff,
+  Loader2,
+  MapPin,
   Phone,
   RotateCcw,
   Search,
+  Trash2,
 } from "lucide-react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { AdminRide } from "@/lib/admin";
 import { formatDate, formatTime, todayISO } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { adminDeleteRideAction, adminSetRideHiddenAction } from "./actions";
 
 type Scope = "all" | "today" | "upcoming";
 
@@ -18,6 +26,13 @@ const STATUS_STYLE: Record<AdminRide["status"], string> = {
   active: "bg-[var(--success)]/10 text-[var(--success)]",
   full: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400",
   cancelled: "bg-muted text-muted-foreground",
+};
+
+/** "cancelled" is how a ride is hidden from the rider-facing feed. */
+const STATUS_LABEL: Record<AdminRide["status"], string> = {
+  active: "active",
+  full: "full",
+  cancelled: "hidden",
 };
 
 const RIDER_STYLE: Record<string, string> = {
@@ -129,16 +144,14 @@ export function RidesTable({ rides }: { rides: AdminRide[] }) {
           ) : (
               filtered.map((r) => {
                 const open = expanded.has(r.id);
-                const hasRiders = r.riders.length > 0;
                 return (
                   <tbody key={r.id} className="border-b last:border-0">
                     <tr
                       className={cn(
-                        "align-middle",
-                        hasRiders && "cursor-pointer hover:bg-muted/30",
+                        "cursor-pointer align-middle hover:bg-muted/30",
                         open && "bg-muted/30",
                       )}
-                      onClick={() => hasRiders && toggle(r.id)}
+                      onClick={() => toggle(r.id)}
                     >
                       <Td>
                         <div className="font-medium">{formatDate(r.depart_date)}</div>
@@ -197,27 +210,38 @@ export function RidesTable({ rides }: { rides: AdminRide[] }) {
                             STATUS_STYLE[r.status],
                           )}
                         >
-                          {r.status}
+                          {STATUS_LABEL[r.status]}
                         </span>
                       </Td>
                       <Td>
-                        {hasRiders && (
-                          <ChevronDown
-                            className={cn(
-                              "size-4 text-muted-foreground transition-transform",
-                              open && "rotate-180",
-                            )}
-                          />
-                        )}
+                        <ChevronDown
+                          className={cn(
+                            "size-4 text-muted-foreground transition-transform",
+                            open && "rotate-180",
+                          )}
+                        />
                       </Td>
                     </tr>
 
-                    {open && hasRiders && (
+                    {open && (
                       <tr className="bg-muted/20">
-                        <td colSpan={7} className="px-4 py-3">
-                          <p className="mb-2 text-xs font-medium text-muted-foreground">
-                            {r.riders.length} requester
-                            {r.riders.length === 1 ? "" : "s"}
+                        <td colSpan={7} className="space-y-3 px-4 py-3">
+                          <p className="flex items-start gap-1.5 text-sm">
+                            <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+                            <span className="text-muted-foreground">
+                              Pickup:
+                            </span>
+                            <span className="font-medium">
+                              {r.pickup_label}
+                            </span>
+                          </p>
+
+                          <RideActions ride={r} />
+
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {r.riders.length === 0
+                              ? "No requests yet"
+                              : `${r.riders.length} requester${r.riders.length === 1 ? "" : "s"}`}
                           </p>
                           <ul className="space-y-1.5">
                             {r.riders.map((rider, i) => (
@@ -254,6 +278,99 @@ export function RidesTable({ rides }: { rides: AdminRide[] }) {
           )}
         </table>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Hide / restore and hard-delete, shown inside the expanded row. Hiding sets
+ * the ride to `cancelled` so it drops out of the rider feed; deleting removes
+ * the ride and its requests for good.
+ */
+function RideActions({ ride }: { ride: AdminRide }) {
+  const [pending, start] = useTransition();
+  const hidden = ride.status === "cancelled";
+
+  function setHidden(next: boolean) {
+    start(async () => {
+      const res = await adminSetRideHiddenAction(ride.id, next);
+      if (res.error) toast.error(res.error);
+      else toast.success(next ? "Ride hidden from riders." : "Ride restored.");
+    });
+  }
+
+  function remove() {
+    return new Promise<void>((resolve) => {
+      start(async () => {
+        const res = await adminDeleteRideAction(ride.id);
+        if (res.error) toast.error(res.error);
+        else toast.success("Ride deleted.");
+        resolve();
+      });
+    });
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        onClick={() => setHidden(!hidden)}
+        disabled={pending}
+        className="inline-flex items-center gap-1.5 rounded-lg border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+      >
+        {pending ? (
+          <Loader2 className="size-3.5 animate-spin" />
+        ) : hidden ? (
+          <Eye className="size-3.5" />
+        ) : (
+          <EyeOff className="size-3.5" />
+        )}
+        {hidden ? "Restore ride" : "Hide ride"}
+      </button>
+
+      <ConfirmDialog
+        destructive
+        trigger={
+          <button
+            type="button"
+            disabled={pending}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+          >
+            <Trash2 className="size-3.5" />
+            Delete ride
+          </button>
+        }
+        title="Delete this ride?"
+        description={
+          <>
+            <p>
+              {formatDate(ride.depart_date)} ·{" "}
+              {formatTime(ride.depart_time)} ·{" "}
+              {ride.driver.name ?? "Unknown driver"}
+            </p>
+            <p>
+              This permanently removes the ride and all {ride.requests.total}{" "}
+              seat {ride.requests.total === 1 ? "request" : "requests"} on it.
+              It can&apos;t be undone.
+            </p>
+            {ride.requests.approved > 0 && (
+              <p className="font-medium text-destructive">
+                {ride.requests.approved} rider
+                {ride.requests.approved === 1 ? " has" : "s have"} a confirmed
+                seat. Hiding the ride may be the safer option.
+              </p>
+            )}
+          </>
+        }
+        confirmLabel="Delete ride"
+        onConfirm={remove}
+      />
+
+      <span className="text-xs text-muted-foreground">
+        {hidden
+          ? "Hidden — riders can't see or request this ride."
+          : "Hiding keeps the record but removes it from the rider feed."}
+      </span>
     </div>
   );
 }

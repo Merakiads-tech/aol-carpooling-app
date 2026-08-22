@@ -36,7 +36,11 @@ export function RideCard({
           direction={ride.direction}
           eventName={ride.event_location.name}
         />
-        <SeatDots total={ride.seats_total} filled={ride.seats_filled} />
+        <SeatDots
+          total={ride.seats_total}
+          filled={ride.seats_filled}
+          isFull={ride.is_full}
+        />
       </div>
 
       <div className="p-4">
@@ -64,14 +68,17 @@ export function RideCard({
 
         <dl className="mt-3 grid grid-cols-1 gap-1.5 text-sm sm:grid-cols-2">
           <div className="flex items-center gap-2">
-            <Clock className="size-4 text-muted-foreground" aria-hidden />
+            <Clock className="size-4 shrink-0 text-muted-foreground" aria-hidden />
             <span className="font-medium">
               {formatDate(ride.depart_date)} · {formatTime(ride.depart_time)}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="size-4 text-muted-foreground" aria-hidden />
-            <span className="truncate">{ride.pickup_label}</span>
+          <div className="flex items-start gap-2">
+            <MapPin
+              className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+              aria-hidden
+            />
+            <span className="min-w-0 break-words">{ride.pickup_label}</span>
           </div>
         </dl>
 
@@ -91,15 +98,28 @@ export function RideCard({
   );
 }
 
-function SeatDots({ total, filled }: { total: number; filled: number }) {
+function SeatDots({
+  total,
+  filled,
+  isFull,
+}: {
+  total: number;
+  filled: number;
+  isFull: boolean;
+}) {
+  // A ride marked full has every seat taken, whatever the approved count says.
+  const taken = isFull ? total : filled;
   return (
-    <span className="flex items-center gap-1" aria-label={`${filled} of ${total} seats filled`}>
+    <span
+      className="flex items-center gap-1"
+      aria-label={`${taken} of ${total} seats filled`}
+    >
       {Array.from({ length: total }).map((_, i) => (
         <span
           key={i}
           className={cn(
             "size-2 rounded-full",
-            i < filled ? "bg-current opacity-90" : "bg-current opacity-25",
+            i < taken ? "bg-current opacity-90" : "bg-current opacity-25",
           )}
         />
       ))}

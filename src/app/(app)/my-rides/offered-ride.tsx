@@ -1,22 +1,45 @@
 "use client";
 
 import { useTransition } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
-import { Check, Loader2, Lock, MapPin, Phone, UserRoundCheck, X } from "lucide-react";
+import {
+  Check,
+  EyeOff,
+  Loader2,
+  Lock,
+  MapPin,
+  Pencil,
+  Phone,
+  Trash2,
+  UserRoundCheck,
+  X,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { GenderBadge, RoleBadge } from "@/components/badges";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RouteLabel } from "@/components/route-label";
 import { TimeChip } from "@/components/time-chip";
 import { cn } from "@/lib/utils";
 import type { OfferedRide } from "@/lib/types";
-import { respondToRequestAction, setRideStatusAction } from "./actions";
+import {
+  deleteMyRideAction,
+  respondToRequestAction,
+  setRideStatusAction,
+} from "./actions";
 
 function initials(name: string | null) {
   if (!name) return "?";
   return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 }
 
-export function OfferedRideCard({ ride }: { ride: OfferedRide }) {
+export function OfferedRideCard({
+  ride,
+  today,
+}: {
+  ride: OfferedRide;
+  today: string;
+}) {
   const [pending, start] = useTransition();
   const pendingReqs = ride.requests.filter((r) => r.status === "pending");
   const approvedReqs = ride.requests.filter((r) => r.status === "approved");
@@ -27,13 +50,31 @@ export function OfferedRideCard({ ride }: { ride: OfferedRide }) {
   const booked = ride.seats_filled;
   const left = Math.max(ride.seats_total - booked, 0);
   const closed = ride.status === "full";
+  const hidden = ride.status === "cancelled";
   const full = closed || left === 0;
+  // A departed ride is history: it can't be edited or deleted any more (only
+  // an admin can remove it). Mirrors update_my_ride() / delete_my_ride().
+  const past = ride.depart_date < today;
+  // Editing is only safe while nobody holds a seat — mirrors update_my_ride().
+  const canEdit = !hidden && !past && booked === 0;
+  const canDelete = !past;
 
-  function toggleFull() {
+  function setFull(next: boolean) {
     start(async () => {
-      const res = await setRideStatusAction(ride.id, closed ? "active" : "full");
+      const res = await setRideStatusAction(ride.id, next ? "full" : "active");
       if (res.error) toast.error(res.error);
-      else toast.success(closed ? "Ride reopened." : "Marked as full.");
+      else toast.success(next ? "Marked as full." : "Ride reopened.");
+    });
+  }
+
+  function remove() {
+    return new Promise<void>((resolve) => {
+      start(async () => {
+        const res = await deleteMyRideAction(ride.id);
+        if (res.error) toast.error(res.error);
+        else toast.success("Ride deleted.");
+        resolve();
+      });
     });
   }
 
@@ -42,8 +83,16 @@ export function OfferedRideCard({ ride }: { ride: OfferedRide }) {
       className={cn(
         "overflow-hidden rounded-2xl border bg-card shadow-sm",
         pendingReqs.length > 0 && "border-amber-300 dark:border-amber-500/40",
+        hidden && "opacity-70",
       )}
     >
+      {hidden && (
+        <p className="flex items-center gap-1.5 bg-muted px-4 py-2 text-xs font-medium text-muted-foreground">
+          <EyeOff className="size-3.5" />
+          Taken down by a Ride Admin — riders can no longer see this ride.
+        </p>
+      )}
+
       {/* ── Identity: time + where ── */}
       <div className="flex items-start gap-3 px-4 pt-4">
         <TimeChip time={ride.depart_time} direction={ride.direction} />
@@ -53,9 +102,9 @@ export function OfferedRideCard({ ride }: { ride: OfferedRide }) {
             eventName={ride.event_location.name}
             className="text-base"
           />
-          <div className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
-            <MapPin className="size-3.5 shrink-0" />
-            <span className="truncate">{ride.pickup_label}</span>
+          <div className="mt-0.5 flex items-start gap-1 text-sm text-muted-foreground">
+            <MapPin className="mt-0.5 size-3.5 shrink-0" />
+            <span className="min-w-0 break-words">{ride.pickup_label}</span>
           </div>
         </div>
         {ride.gender_only && (
@@ -88,7 +137,10 @@ export function OfferedRideCard({ ride }: { ride: OfferedRide }) {
             {full ? "seats left" : left === 1 ? "seat left" : "seats left"}
           </span>
         </div>
-        <SeatMeter booked={booked} total={ride.seats_total} />
+        <SeatMeter
+          booked={full ? ride.seats_total : booked}
+          total={ride.seats_total}
+        />
         <span className="ml-auto text-xs text-muted-foreground">
           {booked}/{ride.seats_total} booked
         </span>
@@ -158,18 +210,108 @@ export function OfferedRideCard({ ride }: { ride: OfferedRide }) {
         )}
       </div>
 
-      {/* ── Manage (secondary) ── */}
-      <div className="border-t">
-        <button
-          onClick={toggleFull}
-          disabled={pending}
-          className="flex w-full items-center justify-center gap-1.5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-        >
-          {pending && <Loader2 className="size-3.5 animate-spin" />}
-          {closed ? "Reopen this ride" : "Mark ride as full"}
-        </button>
-      </div>
+      {/* ── Manage (secondary) — nothing to manage once a ride has departed ── */}
+      {past ? (
+        <p className="border-t px-4 py-2.5 text-center text-xs text-muted-foreground">
+          This ride has departed. Ask a Ride Admin if it needs removing.
+        </p>
+      ) : (
+        <div className="flex divide-x border-t [&>*]:flex-1">
+          {!hidden &&
+            (closed ? (
+              <ManageButton onClick={() => setFull(false)} disabled={pending}>
+                {pending && <Loader2 className="size-3.5 animate-spin" />}
+                Reopen this ride
+              </ManageButton>
+            ) : (
+              <ConfirmDialog
+                trigger={
+                  <ManageButton disabled={pending}>
+                    {pending && <Loader2 className="size-3.5 animate-spin" />}
+                    Mark ride as full
+                  </ManageButton>
+                }
+                title="Mark this ride as full?"
+                description={
+                  <>
+                    <p>
+                      All {ride.seats_total}{" "}
+                      {ride.seats_total === 1 ? "seat" : "seats"} will show as
+                      booked
+                      {left > 0 && (
+                        <>
+                          {" "}
+                          — including the {left} you haven&apos;t given out yet
+                        </>
+                      )}
+                      , and riders won&apos;t be able to request a seat.
+                    </p>
+                    <p>You can reopen the ride at any time.</p>
+                  </>
+                }
+                confirmLabel="Mark as full"
+                onConfirm={() => setFull(true)}
+              />
+            ))}
+
+          {canEdit && (
+            <Link href={`/rides/${ride.id}/edit`} className={MANAGE_CLS}>
+              <Pencil className="size-3.5" />
+              Edit ride
+            </Link>
+          )}
+
+          {canDelete && (
+            <ConfirmDialog
+              destructive
+              trigger={
+                <ManageButton
+                  disabled={pending}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="size-3.5" />
+                  Delete ride
+                </ManageButton>
+              }
+              title="Delete this ride?"
+              description={
+                <>
+                  <p>
+                    This permanently removes the ride and every seat request on
+                    it. It can&apos;t be undone.
+                  </p>
+                  {approvedReqs.length > 0 && (
+                    <p className="font-medium text-destructive">
+                      {approvedReqs.length}{" "}
+                      {approvedReqs.length === 1 ? "rider has" : "riders have"}{" "}
+                      a confirmed seat — please let them know.
+                    </p>
+                  )}
+                </>
+              }
+              confirmLabel="Delete ride"
+              onConfirm={remove}
+            />
+          )}
+        </div>
+      )}
     </article>
+  );
+}
+
+/** One cell of the manage footer — full-width tap target, muted until hovered. */
+const MANAGE_CLS =
+  "flex w-full items-center justify-center gap-1.5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50";
+
+function ManageButton({
+  children,
+  className,
+  ...props
+}: React.ComponentProps<"button">) {
+  return (
+    <button type="button" className={cn(MANAGE_CLS, className)} {...props}>
+      {children}
+    </button>
   );
 }
 

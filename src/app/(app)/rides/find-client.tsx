@@ -76,8 +76,17 @@ export function FindClient({
     return m;
   }, [forDirection]);
 
+  // Chronological, but at the same departure time a car with seats left beats
+  // one that's already full — a full ride is no use to someone browsing.
   const dayRides = useMemo(
-    () => forDirection.filter((r) => r.depart_date === date),
+    () =>
+      forDirection
+        .filter((r) => r.depart_date === date)
+        .sort(
+          (a, b) =>
+            a.depart_time.localeCompare(b.depart_time) ||
+            Number(a.is_full) - Number(b.is_full),
+        ),
     [forDirection, date],
   );
 

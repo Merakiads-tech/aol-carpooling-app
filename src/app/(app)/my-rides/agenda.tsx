@@ -23,7 +23,7 @@ export function Agenda(props: Props) {
 
   const renderCard = (item: OfferedRide | MyRequest) =>
     kind === "offered" ? (
-      <OfferedRideCard ride={item as OfferedRide} />
+      <OfferedRideCard ride={item as OfferedRide} today={today} />
     ) : (
       <RequestedCard req={item as MyRequest} />
     );

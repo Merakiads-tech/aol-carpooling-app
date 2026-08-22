@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import type {
+  EditableRide,
   EventLocation,
   MyRequest,
   OfferedRide,
@@ -69,6 +70,14 @@ export async function getRideDetail(id: string): Promise<RideCard | null> {
   const supabase = await createClient();
   const { data } = await supabase.rpc("get_ride_detail", { p_ride_id: id });
   return (data as RideCard) ?? null;
+}
+
+/** One of my own rides plus the counts the edit form gates on. Null if it
+ *  isn't mine (or doesn't exist). */
+export async function getMyRide(id: string): Promise<EditableRide | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("get_my_ride", { p_ride_id: id });
+  return (data as EditableRide) ?? null;
 }
 
 export async function getMyOfferedRides(): Promise<OfferedRide[]> {

@@ -119,7 +119,9 @@ function Row({
                 key={k}
                 className={cn(
                   "size-2 rounded-full",
-                  k < ride.seats_filled
+                  // a ride the driver marked full counts every seat as taken,
+                  // even the ones with no approved request behind them
+                  ride.is_full || k < ride.seats_filled
                     ? "bg-foreground/20"
                     : "bg-[var(--success)]",
                 )}
@@ -136,10 +138,14 @@ function Row({
 
         {open && (
           <div className="mt-2 overflow-hidden rounded-2xl border bg-card">
-            <div className="flex items-center gap-2 px-4 py-3 text-sm">
-              <MapPin className="size-4 shrink-0 text-[var(--gold-ink)]" />
-              <span className="text-muted-foreground">Picks you up at</span>
-              <span className="truncate font-medium">{ride.pickup_label}</span>
+            <div className="flex items-start gap-2 px-4 py-3 text-sm">
+              <MapPin className="mt-0.5 size-4 shrink-0 text-[var(--gold-ink)]" />
+              <div className="min-w-0 flex-1">
+                <span className="text-muted-foreground">Picks you up at</span>{" "}
+                <span className="font-medium break-words">
+                  {ride.pickup_label}
+                </span>
+              </div>
             </div>
             {ride.driver_phone && (
               <a

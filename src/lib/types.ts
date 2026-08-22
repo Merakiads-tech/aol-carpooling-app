@@ -69,6 +69,25 @@ export type OfferedRide = {
   requests: OfferedRequest[];
 };
 
+/** One of my own rides, loaded for the edit form (get_my_ride). */
+export type EditableRide = {
+  id: string;
+  direction: RideDirection;
+  depart_date: string;
+  depart_time: string;
+  pickup_label: string;
+  pickup_lat: number | null;
+  pickup_lng: number | null;
+  seats_total: number;
+  show_phone_public: boolean;
+  gender_only: Gender | null;
+  status: RideStatus;
+  event_location: { id: string; name: string };
+  /** Seats already approved — editing is blocked once this is above zero. */
+  approved_seats: number;
+  pending_requests: number;
+};
+
 export type MyRequest = {
   request_id: string;
   status: RequestStatus;
