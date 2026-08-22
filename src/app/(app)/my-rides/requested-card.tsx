@@ -82,9 +82,9 @@ export function RequestedCard({ req }: { req: MyRequest }) {
             className="mt-1.5 text-sm text-muted-foreground"
           />
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="size-3.5" />
-              {req.pickup_label}
+            <span className="inline-flex max-w-full items-start gap-1">
+              <MapPin className="mt-0.5 size-3.5 shrink-0" />
+              <span className="min-w-0 break-words">{req.pickup_label}</span>
             </span>
             <span className="inline-flex items-center gap-1">
               <Users className="size-3.5" />

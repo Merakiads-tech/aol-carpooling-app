@@ -38,3 +38,8 @@ export async function setRideStatusAction(
 ) {
   return run("set_ride_status", { p_ride_id: rideId, p_status: status });
 }
+
+/** Hard-delete one of my own rides. Seat requests cascade away with it. */
+export async function deleteMyRideAction(rideId: string) {
+  return run("delete_my_ride", { p_ride_id: rideId });
+}
