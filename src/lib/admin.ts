@@ -120,15 +120,30 @@ export async function getPendingNow(): Promise<PendingNow[]> {
   return (data as PendingNow[]) ?? [];
 }
 
+/**
+ * Null means the stat could not be loaded (a missing RPC, a permission
+ * problem), which is NOT the same as "nothing has happened yet" — the caller
+ * has to tell those apart, or the dashboard reports a confident zero it can't
+ * back up.
+ */
 export async function getAdminImpact(): Promise<AdminImpact | null> {
   const supabase = await createClient();
-  const { data } = await supabase.rpc("admin_impact");
+  const { data, error } = await supabase.rpc("admin_impact");
+  if (error) {
+    console.error("admin_impact failed:", error.message);
+    return null;
+  }
   return (data as AdminImpact) ?? null;
 }
 
+/** @see {@link getAdminImpact} on what a null return means. */
 export async function getAdminResponseTime(): Promise<AdminResponseTime | null> {
   const supabase = await createClient();
-  const { data } = await supabase.rpc("admin_response_time");
+  const { data, error } = await supabase.rpc("admin_response_time");
+  if (error) {
+    console.error("admin_response_time failed:", error.message);
+    return null;
+  }
   return (data as AdminResponseTime) ?? null;
 }
 

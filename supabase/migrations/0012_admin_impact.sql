@@ -87,9 +87,10 @@ begin
 end $$;
 
 -- ------------------------------------------------------------------
--- How long drivers take to answer a seat request, over the 50 most
--- recent decisions. Median leads because a couple of week-long replies
--- drag the average far from typical.
+-- How long drivers take to answer a seat request. The window is the 50
+-- most recent decisions, or all of them when there are fewer than 50 --
+-- the limit is a cap, not a requirement. Median leads because a couple
+-- of week-long replies drag the average far from typical.
 -- ------------------------------------------------------------------
 create or replace function public.admin_response_time()
 returns jsonb language plpgsql stable security definer set search_path = public as $$
@@ -105,7 +106,7 @@ begin
     where q.status in ('approved', 'declined')
       and q.updated_at > q.created_at
     order by q.updated_at desc
-    limit 50
+    limit 50           -- a cap: fewer rows simply means a smaller sample
   )
   select count(*),
          percentile_cont(0.5) within group (order by mins),

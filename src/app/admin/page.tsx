@@ -116,7 +116,9 @@ export default async function AdminOverviewPage() {
           <p className="mb-4 text-xs text-muted-foreground">
             All-time, from every seat a driver actually gave away
           </p>
-          {impact && impact.seats_shared > 0 ? (
+          {!impact ? (
+            <Unavailable stat="admin_impact" />
+          ) : impact.seats_shared > 0 ? (
             <>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <Impact
@@ -165,10 +167,13 @@ export default async function AdminOverviewPage() {
         <div className="rounded-2xl border bg-card p-5">
           <h2 className="text-sm font-medium">Driver response time</h2>
           <p className="mb-4 text-xs text-muted-foreground">
-            Last {speed?.sample ?? 0} answered request
-            {speed?.sample === 1 ? "" : "s"}
+            {speed && speed.sample > 0
+              ? `Last ${speed.sample} answered request${speed.sample === 1 ? "" : "s"}${speed.sample >= SPEED_WINDOW ? "" : " so far"}`
+              : `Most recent ${SPEED_WINDOW} answered requests`}
           </p>
-          {speed && speed.sample > 0 ? (
+          {!speed ? (
+            <Unavailable stat="admin_response_time" />
+          ) : speed.sample > 0 ? (
             <>
               <div className="flex items-center gap-2">
                 <Timer className="size-4 text-muted-foreground" />
@@ -248,6 +253,26 @@ The average runs well ahead of the median when a few
         )}
       </section>
     </div>
+  );
+}
+
+/** How many recent decisions admin_response_time() averages over. */
+const SPEED_WINDOW = 50;
+
+/**
+ * Shown when a stat RPC didn't answer. Saying "0" here would be a claim the
+ * dashboard can't support, so name the missing piece instead.
+ */
+function Unavailable({ stat }: { stat: string }) {
+  return (
+    <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+      Couldn&apos;t load this stat.
+      <br />
+      <span className="text-xs">
+        <code>{stat}()</code> isn&apos;t answering — check that the latest
+        migration in <code>supabase/migrations/</code> has been run.
+      </span>
+    </p>
   );
 }
 
