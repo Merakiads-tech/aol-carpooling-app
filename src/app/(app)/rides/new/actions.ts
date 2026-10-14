@@ -1,7 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { notifyRidePosted } from "@/lib/notify";
 
 export type PostRideState = { error?: string };
 
@@ -38,7 +40,7 @@ export async function createRideAction(
   if (includeReturn && !returnTime)
     return { error: "Please add your return departure time." };
 
-  const { error } = await supabase.rpc("create_ride", {
+  const { data: rideId, error } = await supabase.rpc("create_ride", {
     p_event_location_id: String(formData.get("event_location_id")),
     p_direction: direction,
     p_going_date: goingDate,
@@ -61,5 +63,6 @@ export async function createRideAction(
 
   if (error) return { error: error.message };
 
+  if (rideId) after(() => notifyRidePosted(rideId as string));
   redirect("/my-rides");
 }
